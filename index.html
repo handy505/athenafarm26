@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AthenaFarm26 - 賢い農場</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --cream: #FAF8F5;
+            --matcha: #7B8F6E;
+            --sumi: #2C2C2C;
+            --sumi-light: #5A5A5A;
+            --washi: rgba(255, 252, 245, 0.85);
+        }
+        
+        body {
+            font-family: 'Shippori Mincho', serif;
+            background: var(--cream);
+            color: var(--sumi);
+            min-height: 100vh;
+            line-height: 1.8;
+        }
+        
+        /*  Header */
+        .header {
+            text-align: center;
+            padding: 60px 20px 40px;
+            border-bottom: 1px solid rgba(123, 143, 110, 0.2);
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            letter-spacing: 0.3em;
+            color: var(--sumi);
+            margin-bottom: 10px;
+        }
+        
+        .header-sub {
+            color: var(--sumi-light);
+            font-size: 0.9em;
+            letter-spacing: 0.2em;
+        }
+        
+        /*  Nav */
+        .nav {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            padding: 30px;
+            background: var(--washi);
+            backdrop-filter: blur(10px);
+        }
+        
+        .nav-btn {
+            background: none;
+            border: none;
+            font-family: inherit;
+            font-size: 1.1em;
+            color: var(--sumi-light);
+            cursor: pointer;
+            padding: 10px 20px;
+            transition: all 0.3s;
+            letter-spacing: 0.1em;
+        }
+        
+        .nav-btn:hover { color: var(--sumi); }
+        .nav-btn.active { color: var(--matcha); border-bottom: 2px solid var(--matcha); }
+        
+        /*  Main */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .tab { display: none; }
+        .tab.active { display: block; }
+        
+        /*  Module */
+        .module-title {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .module-title h2 {
+            font-size: 1.8em;
+            letter-spacing: 0.2em;
+            margin-bottom: 5px;
+        }
+        
+        .module-title p {
+            color: var(--sumi-light);
+            font-size: 0.85em;
+        }
+        
+        /*  Panel */
+        .panel {
+            background: white;
+            border: 1px solid rgba(123, 143, 110, 0.15);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .panel-title {
+            font-size: 1.1em;
+            color: var(--sumi);
+            margin-bottom: 20px;
+            letter-spacing: 0.1em;
+        }
+        
+        /*  Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        /*  Zone Card */
+        .zone {
+            background: var(--cream);
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .zone-icon { font-size: 2.5em; margin-bottom: 10px; }
+        .zone-name { font-size: 1em; margin-bottom: 15px; color: var(--sumi); }
+        
+        .zone-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 0.85em;
+        }
+        
+        .zone-metric { text-align: center; }
+        .zone-metric-value { font-size: 1.2em; color: var(--matcha); }
+        .zone-metric-label { color: var(--sumi-light); font-size: 0.75em; }
+        
+        /*  Pool Card */
+        .pool {
+            background: linear-gradient(135deg, #E8F0F5 0%, #D4E5ED 100%);
+            padding: 20px;
+            border-radius: 4px;
+        }
+        
+        .pool-icon { font-size: 2.5em; margin-bottom: 10px; }
+        .pool-name { font-size: 1em; margin-bottom: 15px; }
+        
+        .pool-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-size: 0.8em;
+        }
+        
+        .pool-stat { color: var(--sumi-light); }
+        .pool-stat span { color: var(--matcha); font-weight: 500; }
+        
+        /*  Health Bar */
+        .health-bar {
+            height: 4px;
+            background: rgba(123, 143, 110, 0.2);
+            margin-top: 15px;
+            border-radius: 2px;
+        }
+        
+        .health-fill {
+            height: 100%;
+            background: var(--matcha);
+            border-radius: 2px;
+            transition: width 0.3s;
+        }
+        
+        /*  Controls */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .ctrl-btn {
+            padding: 10px 20px;
+            border: 1px solid var(--matcha);
+            background: transparent;
+            color: var(--sumi);
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+        
+        .ctrl-btn:hover { background: var(--matcha); color: white; }
+        .ctrl-btn.active { background: var(--matcha); color: white; }
+        
+        .ctrl-status {
+            padding: 15px;
+            background: var(--cream);
+            font-size: 0.9em;
+            color: var(--sumi-light);
+        }
+        
+        /*  Slider */
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .slider-label { font-size: 0.9em; min-width: 80px; }
+        
+        input[type="range"] {
+            flex: 1;
+            accent-color: var(--matcha);
+        }
+        
+        .slider-val { font-size: 0.9em; min-width: 40px; }
+        
+        /*  Water Quality */
+        .water-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        
+        .water-card {
+            text-align: center;
+            padding: 15px;
+            background: var(--cream);
+        }
+        
+        .water-icon { font-size: 1.5em; margin-bottom: 5px; }
+        .water-value { font-size: 1.3em; color: var(--matcha); }
+        .water-label { font-size: 0.75em; color: var(--sumi-light); }
+        
+        /*  Footer */
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            margin-top: 40px;
+            border-top: 1px solid rgba(123, 143, 110, 0.2);
+            color: var(--sumi-light);
+            font-size: 0.85em;
+        }
+        
+        /*  Responsive */
+        @media (max-width: 768px) {
+            .water-cards { grid-template-columns: repeat(2, 1fr); }
+            .header h1 { font-size: 1.8em; letter-spacing: 0.2em; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>AthenaFarm26</h1>
+        <p class="header-sub">賢い農場 · Smart Farm Simulation</p>
+    </header>
+    
+    <nav class="nav">
+        <button class="nav-btn active" onclick="switchTab('aqua')">水產 / Aquaculture</button>
+        <button class="nav-btn" onclick="switchTab('greenhouse')">溫室 / Greenhouse</button>
+    </nav>
+    
+    <main class="container">
+        <!-- 水產 -->
+        <section class="tab active" id="tab-aqua">
+            <div class="module-title">
+                <h2>🐟 水產養殖</h2>
+                <p>Aquaculture · Fish Ponds · Water Quality</p>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title">魚池 / Fish Ponds</div>
+                <div class="grid" id="aquaGrid"></div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title">水質 / Water Quality</div>
+                <div class="water-cards">
+                    <div class="water-card">
+                        <div class="water-icon">🌡️</div>
+                        <div class="water-value" id="avgTemp">26.5°</div>
+                        <div class="water-label">水溫 / Temp</div>
+                    </div>
+                    <div class="water-card">
+                        <div class="water-icon">⚗️</div>
+                        <div class="water-value" id="avgPh">7.3</div>
+                        <div class="water-label">pH 值 / pH</div>
+                    </div>
+                    <div class="water-card">
+                        <div class="water-icon">🫧</div>
+                        <div class="water-value" id="avgOxygen">6.2</div>
+                        <div class="water-label">溶氧 / DO</div>
+                    </div>
+                    <div class="water-card">
+                        <div class="water-icon">🧪</div>
+                        <div class="water-value" id="avgAmmonia">0.3</div>
+                        <div class="water-label">氨氮 / NH₃</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 溫室 -->
+        <section class="tab" id="tab-greenhouse">
+            <div class="module-title">
+                <h2>🏠 溫室控制</h2>
+                <p>Greenhouse · Environment · HVAC</p>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title">區域 / Zones</div>
+                <div class="grid" id="ghZones"></div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title">控制 / Controls</div>
+                <div class="controls">
+                    <button class="ctrl-btn active" onclick="setVent('natural')">自然通風 / Natural</button>
+                    <button class="ctrl-btn" onclick="setVent('force')">強制通風 / Force</button>
+                    <button class="ctrl-btn" onclick="setVent('off')">關閉 / Off</button>
+                </div>
+                <div class="slider-row">
+                    <span class="slider-label">霧化 / Mist</span>
+                    <input type="range" id="misting" min="0" max="100" value="50" onchange="updateMisting(this.value)">
+                    <span class="slider-val" id="mistingVal">50%</span>
+                </div>
+                <div class="slider-row">
+                    <span class="slider-label">遮陽 / Shade</span>
+                    <input type="range" id="shade" min="0" max="100" value="30" onchange="updateShade(this.value)">
+                    <span class="slider-val" id="shadeVal">30%</span>
+                </div>
+                <div class="ctrl-status" id="ctrlStatus">通風: 自然通風 / Natural Ventilation</div>
+            </div>
+        </section>
+    </main>
+    
+    <footer class="footer">
+        <p>AthenaFarm26 · 智慧農場邏輯模擬 / Smart Farm Logic Simulation</p>
+        <p style="margin-top: 5px;">IoT · AI · Big Data</p>
+    </footer>
+
+    <script>
+        //  Data
+        const species = [
+            { name: '吳郭魚 / Tilapia', icon: '🐟', temp: [24, 28], ph: [6.5, 8.0], oxygen: 5 },
+            { name: '白蝦 / Shrimp', icon: '🦐', temp: [26, 30], ph: [7.5, 8.5], oxygen: 6 },
+            { name: '鱸魚 / Sea Bass', icon: '🐠', temp: [18, 24], ph: [6.5, 8.0], oxygen: 5.5 },
+            { name: '石斑 / Grouper', icon: '🐡', temp: [22, 28], ph: [7.0, 8.0], oxygen: 5 }
+        ];
+        
+        const zones = [
+            { name: '葉菜 / Leaf', icon: '🥬', temp: [18, 24], humidity: [70, 85] },
+            { name: '果菜 / Fruit', icon: '🍅', temp: [22, 28], humidity: [60, 75] },
+            { name: '育苗 / Seedling', icon: '🌱', temp: [18, 22], humidity: [80, 95] }
+        ];
+        
+        let aquaData = [];
+        let ghData = [];
+        let ventMode = 'natural';
+        
+        //  Init
+        function init() {
+            species.forEach((s, i) => {
+                aquaData.push({
+                    ...s,
+                    currentTemp: (s.temp[0] + s.temp[1]) / 2 + (Math.random() - 0.5) * 2,
+                    currentPh: (s.ph[0] + s.ph[1]) / 2 + (Math.random() - 0.5) * 0.3,
+                    currentOxygen: s.oxygen + (Math.random() - 0.5),
+                    ammonia: 0.2 + Math.random() * 0.2,
+                    health: 85 + Math.random() * 15
+                });
+            });
+            
+            zones.forEach((z, i) => {
+                ghData.push({
+                    ...z,
+                    currentTemp: (z.temp[0] + z.temp[1]) / 2 + (Math.random() - 0.5) * 2,
+                    currentHumidity: (z.humidity[0] + z.humidity[1]) / 2 + (Math.random() - 0.5) * 5
+                });
+            });
+            
+            renderAqua();
+            renderGh();
+            startSimulation();
+        }
+        
+        //  Render
+        function renderAqua() {
+            const grid = document.getElementById('aquaGrid');
+            grid.innerHTML = aquaData.map((d, i) => `
+                <div class="pool">
+                    <div class="pool-icon">${d.icon}</div>
+                    <div class="pool-name">${d.name}</div>
+                    <div class="pool-stats">
+                        <div class="pool-stat">水溫 <span id="temp-${i}">${d.currentTemp.toFixed(1)}°</span></div>
+                        <div class="pool-stat">pH <span id="ph-${i}">${d.currentPh.toFixed(1)}</span></div>
+                        <div class="pool-stat">溶氧 <span id="oxy-${i}">${d.currentOxygen.toFixed(1)}</span></div>
+                        <div class="pool-stat">氨氮 <span id="amm-${i}">${d.ammonia.toFixed(2)}</span></div>
+                    </div>
+                    <div class="health-bar">
+                        <div class="health-fill" id="health-${i}" style="width: ${d.health}%"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function renderGh() {
+            const grid = document.getElementById('ghZones');
+            grid.innerHTML = ghData.map((d, i) => `
+                <div class="zone">
+                    <div class="zone-icon">${d.icon}</div>
+                    <div class="zone-name">${d.name}</div>
+                    <div class="zone-metrics">
+                        <div class="zone-metric">
+                            <div class="zone-metric-value" id="gh-temp-${i}">${d.currentTemp.toFixed(1)}°</div>
+                            <div class="zone-metric-label">溫度 / Temp</div>
+                        </div>
+                        <div class="zone-metric">
+                            <div class="zone-metric-value" id="gh-hum-${i}">${d.currentHumidity.toFixed(0)}%</div>
+                            <div class="zone-metric-label">濕度 / Humid</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        //  Simulation
+        function startSimulation() {
+            setInterval(() => {
+                // Aqua
+                aquaData.forEach((d, i) => {
+                    d.currentTemp += (Math.random() - 0.5) * 0.3;
+                    d.currentTemp = Math.max(d.temp[0] - 2, Math.min(d.temp[1] + 2, d.currentTemp));
+                    d.currentPh += (Math.random() - 0.5) * 0.05;
+                    d.currentPh = Math.max(6, Math.min(9, d.currentPh));
+                    d.currentOxygen += (Math.random() - 0.5) * 0.2;
+                    d.currentOxygen = Math.max(3, Math.min(8, d.currentOxygen));
+                    d.ammonia += (Math.random() - 0.5) * 0.02;
+                    d.ammonia = Math.max(0.1, Math.min(1.5, d.ammonia));
+                    d.health += (Math.random() - 0.5) * 0.5;
+                    d.health = Math.max(50, Math.min(100, d.health));
+                    
+                    document.getElementById(`temp-${i}`).textContent = `${d.currentTemp.toFixed(1)}°`;
+                    document.getElementById(`ph-${i}`).textContent = d.currentPh.toFixed(1);
+                    document.getElementById(`oxy-${i}`).textContent = d.currentOxygen.toFixed(1);
+                    document.getElementById(`amm-${i}`).textContent = d.ammonia.toFixed(2);
+                    document.getElementById(`health-${i}`).style.width = `${d.health}%`;
+                });
+                
+                // Averages
+                const avg = arr => arr.reduce((a, b) => a + b, 0) / arr.length;
+                document.getElementById('avgTemp').textContent = `${avg(aquaData.map(d => d.currentTemp)).toFixed(1)}°`;
+                document.getElementById('avgPh').textContent = avg(aquaData.map(d => d.currentPh)).toFixed(1);
+                document.getElementById('avgOxygen').textContent = avg(aquaData.map(d => d.currentOxygen)).toFixed(1);
+                document.getElementById('avgAmmonia').textContent = avg(aquaData.map(d => d.ammonia)).toFixed(2);
+                
+                // Greenhouse
+                ghData.forEach((d, i) => {
+                    let tempMod = ventMode === 'force' ? -1 : ventMode === 'off' ? 1 : 0;
+                    d.currentTemp += (Math.random() - 0.5) * 0.2 + tempMod * 0.1;
+                    d.currentTemp = Math.max(15, Math.min(35, d.currentTemp));
+                    d.currentHumidity += (Math.random() - 0.5) * 1;
+                    d.currentHumidity = Math.max(50, Math.min(100, d.currentHumidity));
+                    
+                    document.getElementById(`gh-temp-${i}`).textContent = `${d.currentTemp.toFixed(1)}°`;
+                    document.getElementById(`gh-hum-${i}`).textContent = `${d.currentHumidity.toFixed(0)}%`;
+                });
+            }, 1500);
+        }
+        
+        //  Controls
+        function switchTab(name) {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.nav-btn[onclick="switchTab('${name}')"]`).classList.add('active');
+            document.getElementById(`tab-${name}`).classList.add('active');
+        }
+        
+        function setVent(mode) {
+            ventMode = mode;
+            document.querySelectorAll('.ctrl-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`.ctrl-btn[onclick="setVent('${mode}')"]`).classList.add('active');
+            const names = { natural: '自然通風 / Natural', force: '強制通風 / Force', off: '關閉 / Off' };
+            document.getElementById('ctrlStatus').textContent = `通風 / Vent: ${names[mode]}`;
+        }
+        
+        function updateMisting(v) {
+            document.getElementById('mistingVal').textContent = `${v}%`;
+        }
+        
+        function updateShade(v) {
+            document.getElementById('shadeVal').textContent = `${v}%`;
+        }
+        
+        init();
+    </script>
+</body>
+</html>
