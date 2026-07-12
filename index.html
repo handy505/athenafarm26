@@ -1,503 +1,1155 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AthenaFarm26 - 賢い農場</title>
+    <title>AthenaFarm26 - 智慧溫室監控</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+
         :root {
-            --cream: #FAF8F5;
-            --matcha: #7B8F6E;
-            --sumi: #2C2C2C;
-            --sumi-light: #5A5A5A;
-            --washi: rgba(255, 252, 245, 0.85);
+            --bg-primary: #0f1419;
+            --bg-secondary: #1a1f2e;
+            --bg-card: #1e2533;
+            --bg-card-hover: #252d3d;
+            --border: #2a3345;
+            --text-primary: #e8eaed;
+            --text-secondary: #8b95a5;
+            --text-muted: #5a6577;
+            --accent: #4ade80;
+            --accent-dim: rgba(74, 222, 128, 0.15);
+            --warning: #fbbf24;
+            --warning-dim: rgba(251, 191, 36, 0.15);
+            --danger: #ef4444;
+            --danger-dim: rgba(239, 68, 68, 0.15);
+            --info: #60a5fa;
+            --info-dim: rgba(96, 165, 250, 0.15);
+            --purple: #a78bfa;
         }
-        
+
         body {
-            font-family: 'Shippori Mincho', serif;
-            background: var(--cream);
-            color: var(--sumi);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
             min-height: 100vh;
-            line-height: 1.8;
+            line-height: 1.5;
         }
-        
-        /*  Header */
-        .header {
-            text-align: center;
-            padding: 60px 20px 40px;
-            border-bottom: 1px solid rgba(123, 143, 110, 0.2);
-        }
-        
-        .header h1 {
-            font-size: 2.5em;
-            letter-spacing: 0.3em;
-            color: var(--sumi);
-            margin-bottom: 10px;
-        }
-        
-        .header-sub {
-            color: var(--sumi-light);
-            font-size: 0.9em;
-            letter-spacing: 0.2em;
-        }
-        
-        /*  Nav */
-        .nav {
+
+        .topbar {
             display: flex;
-            justify-content: center;
-            gap: 40px;
-            padding: 30px;
-            background: var(--washi);
-            backdrop-filter: blur(10px);
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
-        
-        .nav-btn {
-            background: none;
-            border: none;
-            font-family: inherit;
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
             font-size: 1.1em;
-            color: var(--sumi-light);
-            cursor: pointer;
-            padding: 10px 20px;
-            transition: all 0.3s;
-            letter-spacing: 0.1em;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: 0.05em;
         }
-        
-        .nav-btn:hover { color: var(--sumi); }
-        .nav-btn.active { color: var(--matcha); border-bottom: 2px solid var(--matcha); }
-        
-        /*  Main */
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 40px 20px;
+
+        .topbar-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8em;
+            color: var(--text-secondary);
         }
-        
-        .tab { display: none; }
-        .tab.active { display: block; }
-        
-        /*  Module */
-        .module-title {
-            text-align: center;
-            margin-bottom: 40px;
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: pulse 2s infinite;
         }
-        
-        .module-title h2 {
-            font-size: 1.8em;
-            letter-spacing: 0.2em;
-            margin-bottom: 5px;
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
-        
-        .module-title p {
-            color: var(--sumi-light);
-            font-size: 0.85em;
-        }
-        
-        /*  Panel */
-        .panel {
-            background: white;
-            border: 1px solid rgba(123, 143, 110, 0.15);
-            padding: 30px;
-            margin-bottom: 30px;
-        }
-        
-        .panel-title {
-            font-size: 1.1em;
-            color: var(--sumi);
-            margin-bottom: 20px;
-            letter-spacing: 0.1em;
-        }
-        
-        /*  Grid */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
             gap: 20px;
+            font-size: 0.8em;
+            color: var(--text-secondary);
         }
-        
-        /*  Zone Card */
-        .zone {
-            background: var(--cream);
+
+        .topbar-time { font-variant-numeric: tabular-nums; }
+
+        .main {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 0;
+            min-height: calc(100vh - 49px);
+        }
+
+        .content {
             padding: 20px;
-            text-align: center;
+            overflow-y: auto;
         }
-        
-        .zone-icon { font-size: 2.5em; margin-bottom: 10px; }
-        .zone-name { font-size: 1em; margin-bottom: 15px; color: var(--sumi); }
-        
-        .zone-metrics {
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: 0.85em;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        /* Zone Cards */
+        .zones-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .zone-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            transition: all 0.2s;
+        }
+
+        .zone-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent);
+        }
+
+        .zone-card.alert {
+            border-color: var(--danger);
+            background: var(--danger-dim);
+        }
+
+        .zone-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .zone-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .zone-icon { font-size: 1.4em; }
+        .zone-label { font-size: 0.9em; font-weight: 500; }
+
+        .zone-status {
+            font-size: 0.7em;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .zone-status.normal { background: var(--accent-dim); color: var(--accent); }
+        .zone-status.warning { background: var(--warning-dim); color: var(--warning); }
+        .zone-status.danger { background: var(--danger-dim); color: var(--danger); }
+
+        /* Metrics */
+        .metrics-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
-            font-size: 0.85em;
         }
-        
-        .zone-metric { text-align: center; }
-        .zone-metric-value { font-size: 1.2em; color: var(--matcha); }
-        .zone-metric-label { color: var(--sumi-light); font-size: 0.75em; }
-        
-        /*  Pool Card */
-        .pool {
-            background: linear-gradient(135deg, #E8F0F5 0%, #D4E5ED 100%);
+
+        .metric {
+            background: var(--bg-primary);
+            border-radius: 6px;
+            padding: 10px 12px;
+        }
+
+        .metric-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .metric-label {
+            font-size: 0.7em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .metric-trend {
+            font-size: 0.65em;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .metric-trend.up { color: var(--danger); }
+        .metric-trend.down { color: var(--info); }
+        .metric-trend.flat { color: var(--text-muted); }
+
+        .metric-value {
+            font-size: 1.4em;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .metric-unit {
+            font-size: 0.7em;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .metric-bar {
+            height: 3px;
+            background: var(--border);
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .metric-bar-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.5s;
+        }
+
+        .metric-bar-fill.temp { background: var(--info); }
+        .metric-bar-fill.humid { background: var(--accent); }
+        .metric-bar-fill.co2 { background: var(--warning); }
+        .metric-bar-fill.light { background: var(--purple); }
+
+        /* Sparkline */
+        .sparkline-container {
+            height: 28px;
+            margin-top: 6px;
+        }
+
+        .sparkline-container canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Chart Panel */
+        .chart-section {
+            margin-bottom: 24px;
+        }
+
+        .chart-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
             padding: 20px;
-            border-radius: 4px;
         }
-        
-        .pool-icon { font-size: 2.5em; margin-bottom: 10px; }
-        .pool-name { font-size: 1em; margin-bottom: 15px; }
-        
-        .pool-stats {
+
+        .chart-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .chart-btn-group {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-primary);
+            border-radius: 6px;
+            padding: 3px;
+        }
+
+        .chart-btn {
+            padding: 6px 12px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 0.75em;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .chart-btn:hover { color: var(--text-primary); }
+        .chart-btn.active { background: var(--accent); color: var(--bg-primary); font-weight: 500; }
+
+        .chart-label {
+            font-size: 0.75em;
+            color: var(--text-muted);
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 280px;
+        }
+
+        /* Controls */
+        .controls-section { margin-bottom: 24px; }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .control-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .control-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .control-name { font-size: 0.8em; color: var(--text-secondary); }
+
+        .control-mode {
+            font-size: 0.7em;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: var(--accent-dim);
+            color: var(--accent);
+        }
+
+        .control-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .ctrl-btn {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 0.8em;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .ctrl-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+
+        .ctrl-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--bg-primary);
+            font-weight: 500;
+        }
+
+        .slider-control {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .slider-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .slider-name { font-size: 0.8em; color: var(--text-secondary); }
+
+        .slider-value {
+            font-size: 0.8em;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            -webkit-appearance: none;
+            background: var(--border);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-section {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-title {
+            font-size: 0.75em;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 12px;
+        }
+
+        .alert-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .alert-item {
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            background: var(--bg-card);
+            border-radius: 6px;
+            border-left: 3px solid var(--danger);
+        }
+
+        .alert-item.warning { border-left-color: var(--warning); }
+        .alert-item.info { border-left-color: var(--info); }
+
+        .alert-time {
+            font-size: 0.7em;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .alert-msg {
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 8px;
-            font-size: 0.8em;
         }
-        
-        .pool-stat { color: var(--sumi-light); }
-        .pool-stat span { color: var(--matcha); font-weight: 500; }
-        
-        /*  Health Bar */
-        .health-bar {
-            height: 4px;
-            background: rgba(123, 143, 110, 0.2);
-            margin-top: 15px;
-            border-radius: 2px;
+
+        .stat-item {
+            background: var(--bg-card);
+            border-radius: 6px;
+            padding: 12px;
+            text-align: center;
         }
-        
-        .health-fill {
-            height: 100%;
-            background: var(--matcha);
-            border-radius: 2px;
-            transition: width 0.3s;
+
+        .stat-value {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: var(--accent);
+            font-variant-numeric: tabular-nums;
         }
-        
-        /*  Controls */
-        .controls {
+
+        .stat-label {
+            font-size: 0.65em;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .quick-actions {
             display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 20px;
+            flex-direction: column;
+            gap: 6px;
         }
-        
-        .ctrl-btn {
-            padding: 10px 20px;
-            border: 1px solid var(--matcha);
-            background: transparent;
-            color: var(--sumi);
-            font-family: inherit;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 0.9em;
-        }
-        
-        .ctrl-btn:hover { background: var(--matcha); color: white; }
-        .ctrl-btn.active { background: var(--matcha); color: white; }
-        
-        .ctrl-status {
-            padding: 15px;
-            background: var(--cream);
-            font-size: 0.9em;
-            color: var(--sumi-light);
-        }
-        
-        /*  Slider */
-        .slider-row {
+
+        .quick-btn {
             display: flex;
             align-items: center;
-            gap: 15px;
-            margin: 15px 0;
+            gap: 8px;
+            padding: 10px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.2s;
         }
-        
-        .slider-label { font-size: 0.9em; min-width: 80px; }
-        
-        input[type="range"] {
-            flex: 1;
-            accent-color: var(--matcha);
+
+        .quick-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+        .quick-btn-icon { font-size: 1.1em; }
+
+        @media (max-width: 1024px) {
+            .main { grid-template-columns: 1fr; }
+            .sidebar { border-left: none; border-top: 1px solid var(--border); }
         }
-        
-        .slider-val { font-size: 0.9em; min-width: 40px; }
-        
-        /*  Water Quality */
-        .water-cards {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-        }
-        
-        .water-card {
-            text-align: center;
-            padding: 15px;
-            background: var(--cream);
-        }
-        
-        .water-icon { font-size: 1.5em; margin-bottom: 5px; }
-        .water-value { font-size: 1.3em; color: var(--matcha); }
-        .water-label { font-size: 0.75em; color: var(--sumi-light); }
-        
-        /*  Footer */
-        .footer {
-            text-align: center;
-            padding: 40px 20px;
-            margin-top: 40px;
-            border-top: 1px solid rgba(123, 143, 110, 0.2);
-            color: var(--sumi-light);
-            font-size: 0.85em;
-        }
-        
-        /*  Responsive */
-        @media (max-width: 768px) {
-            .water-cards { grid-template-columns: repeat(2, 1fr); }
-            .header h1 { font-size: 1.8em; letter-spacing: 0.2em; }
+
+        @media (max-width: 640px) {
+            .zones-grid { grid-template-columns: 1fr; }
+            .controls-grid { grid-template-columns: 1fr; }
+            .topbar { padding: 10px 16px; }
+            .content { padding: 16px; }
+            .chart-controls { flex-direction: column; align-items: flex-start; }
         }
     </style>
 </head>
 <body>
-    <header class="header">
-        <h1>AthenaFarm26</h1>
-        <p class="header-sub">賢い農場 · Smart Farm Simulation</p>
+    <header class="topbar">
+        <div class="topbar-left">
+            <div class="logo">ATHENAFARM26</div>
+            <div class="topbar-status">
+                <span class="status-dot"></span>
+                <span>系統運作中</span>
+            </div>
+        </div>
+        <div class="topbar-right">
+            <span id="alertCount">0 筆異常</span>
+            <span class="topbar-time" id="currentTime">--:--:--</span>
+        </div>
     </header>
-    
-    <nav class="nav">
-        <button class="nav-btn active" onclick="switchTab('aqua')">水產 / Aquaculture</button>
-        <button class="nav-btn" onclick="switchTab('greenhouse')">溫室 / Greenhouse</button>
-    </nav>
-    
-    <main class="container">
-        <!-- 水產 -->
-        <section class="tab active" id="tab-aqua">
-            <div class="module-title">
-                <h2>🐟 水產養殖</h2>
-                <p>Aquaculture · Fish Ponds · Water Quality</p>
+
+    <div class="main">
+        <div class="content">
+            <!-- Zone Cards -->
+            <div class="section-header">
+                <span class="section-title">區域監控 / Zones</span>
             </div>
-            
-            <div class="panel">
-                <div class="panel-title">魚池 / Fish Ponds</div>
-                <div class="grid" id="aquaGrid"></div>
-            </div>
-            
-            <div class="panel">
-                <div class="panel-title">水質 / Water Quality</div>
-                <div class="water-cards">
-                    <div class="water-card">
-                        <div class="water-icon">🌡️</div>
-                        <div class="water-value" id="avgTemp">26.5°</div>
-                        <div class="water-label">水溫 / Temp</div>
+            <div class="zones-grid" id="zonesGrid"></div>
+
+            <!-- Time Series Chart -->
+            <div class="chart-section">
+                <div class="section-header">
+                    <span class="section-title">歷史趨勢 / Trends</span>
+                </div>
+                <div class="chart-panel">
+                    <div class="chart-controls">
+                        <span class="chart-label">時間</span>
+                        <div class="chart-btn-group" id="timeRangeGroup">
+                            <button class="chart-btn active" onclick="setTimeRange('30m')">30m</button>
+                            <button class="chart-btn" onclick="setTimeRange('1h')">1h</button>
+                            <button class="chart-btn" onclick="setTimeRange('6h')">6h</button>
+                            <button class="chart-btn" onclick="setTimeRange('24h')">24h</button>
+                        </div>
+                        <span class="chart-label">指標</span>
+                        <div class="chart-btn-group" id="metricGroup">
+                            <button class="chart-btn active" onclick="setMetric('temp')">溫度</button>
+                            <button class="chart-btn" onclick="setMetric('humidity')">濕度</button>
+                            <button class="chart-btn" onclick="setMetric('co2')">CO₂</button>
+                            <button class="chart-btn" onclick="setMetric('light')">光照</button>
+                        </div>
+                        <span class="chart-label">區域</span>
+                        <div class="chart-btn-group" id="zoneGroup">
+                            <button class="chart-btn active" onclick="setChartZone(-1)">全部</button>
+                        </div>
                     </div>
-                    <div class="water-card">
-                        <div class="water-icon">⚗️</div>
-                        <div class="water-value" id="avgPh">7.3</div>
-                        <div class="water-label">pH 值 / pH</div>
-                    </div>
-                    <div class="water-card">
-                        <div class="water-icon">🫧</div>
-                        <div class="water-value" id="avgOxygen">6.2</div>
-                        <div class="water-label">溶氧 / DO</div>
-                    </div>
-                    <div class="water-card">
-                        <div class="water-icon">🧪</div>
-                        <div class="water-value" id="avgAmmonia">0.3</div>
-                        <div class="water-label">氨氮 / NH₃</div>
+                    <div class="chart-wrapper">
+                        <canvas id="trendChart"></canvas>
                     </div>
                 </div>
             </div>
-        </section>
-        
-        <!-- 溫室 -->
-        <section class="tab" id="tab-greenhouse">
-            <div class="module-title">
-                <h2>🏠 溫室控制</h2>
-                <p>Greenhouse · Environment · HVAC</p>
-            </div>
-            
-            <div class="panel">
-                <div class="panel-title">區域 / Zones</div>
-                <div class="grid" id="ghZones"></div>
-            </div>
-            
-            <div class="panel">
-                <div class="panel-title">控制 / Controls</div>
-                <div class="controls">
-                    <button class="ctrl-btn active" onclick="setVent('natural')">自然通風 / Natural</button>
-                    <button class="ctrl-btn" onclick="setVent('force')">強制通風 / Force</button>
-                    <button class="ctrl-btn" onclick="setVent('off')">關閉 / Off</button>
+
+            <!-- Controls -->
+            <div class="controls-section">
+                <div class="section-header">
+                    <span class="section-title">設備控制 / Controls</span>
                 </div>
-                <div class="slider-row">
-                    <span class="slider-label">霧化 / Mist</span>
-                    <input type="range" id="misting" min="0" max="100" value="50" onchange="updateMisting(this.value)">
-                    <span class="slider-val" id="mistingVal">50%</span>
+                <div class="controls-grid">
+                    <div class="control-card">
+                        <div class="control-header">
+                            <span class="control-name">通風系統</span>
+                            <span class="control-mode" id="ventMode">自然</span>
+                        </div>
+                        <div class="control-buttons">
+                            <button class="ctrl-btn active" onclick="setVent('natural')">自然通風</button>
+                            <button class="ctrl-btn" onclick="setVent('force')">強制通風</button>
+                            <button class="ctrl-btn" onclick="setVent('off')">關閉</button>
+                        </div>
+                    </div>
+                    <div class="slider-control">
+                        <div class="slider-header">
+                            <span class="slider-name">霧化系統</span>
+                            <span class="slider-value" id="mistingVal">50%</span>
+                        </div>
+                        <input type="range" id="misting" min="0" max="100" value="50" oninput="updateMisting(this.value)">
+                    </div>
+                    <div class="slider-control">
+                        <div class="slider-header">
+                            <span class="slider-name">遮陽系統</span>
+                            <span class="slider-value" id="shadeVal">30%</span>
+                        </div>
+                        <input type="range" id="shade" min="0" max="100" value="30" oninput="updateShade(this.value)">
+                    </div>
                 </div>
-                <div class="slider-row">
-                    <span class="slider-label">遮陽 / Shade</span>
-                    <input type="range" id="shade" min="0" max="100" value="30" onchange="updateShade(this.value)">
-                    <span class="slider-val" id="shadeVal">30%</span>
-                </div>
-                <div class="ctrl-status" id="ctrlStatus">通風: 自然通風 / Natural Ventilation</div>
             </div>
-        </section>
-    </main>
-    
-    <footer class="footer">
-        <p>AthenaFarm26 · 智慧農場邏輯模擬 / Smart Farm Logic Simulation</p>
-        <p style="margin-top: 5px;">IoT · AI · Big Data</p>
-    </footer>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">即時狀態</div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="avgTemp">--</div>
+                        <div class="stat-label">平均溫度 °C</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="avgHumid">--</div>
+                        <div class="stat-label">平均濕度 %</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="avgCO2">--</div>
+                        <div class="stat-label">平均 CO₂</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="avgLight">--</div>
+                        <div class="stat-label">平均光照 k</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-section" style="flex: 1; overflow: hidden;">
+                <div class="sidebar-title">異常紀錄</div>
+                <div class="alert-list" id="alertList">
+                    <div class="alert-item info">
+                        <div>
+                            <div class="alert-time">--:--</div>
+                            <div class="alert-msg">系統初始化中...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">快速操作</div>
+                <div class="quick-actions">
+                    <button class="quick-btn" onclick="emergencyStop()">
+                        <span class="quick-btn-icon">⚠️</span>
+                        <span>緊急停止</span>
+                    </button>
+                    <button class="quick-btn" onclick="exportData()">
+                        <span class="quick-btn-icon">📊</span>
+                        <span>匯出數據</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
-        //  Data
-        const species = [
-            { name: '吳郭魚 / Tilapia', icon: '🐟', temp: [24, 28], ph: [6.5, 8.0], oxygen: 5 },
-            { name: '白蝦 / Shrimp', icon: '🦐', temp: [26, 30], ph: [7.5, 8.5], oxygen: 6 },
-            { name: '鱸魚 / Sea Bass', icon: '🐠', temp: [18, 24], ph: [6.5, 8.0], oxygen: 5.5 },
-            { name: '石斑 / Grouper', icon: '🐡', temp: [22, 28], ph: [7.0, 8.0], oxygen: 5 }
+        const zoneConfig = [
+            { name: '葉菜區', nameEn: 'Leafy Greens', icon: '🥬', temp: [18, 24], humidity: [70, 85] },
+            { name: '果菜區', nameEn: 'Fruiting Crops', icon: '🍅', temp: [22, 28], humidity: [60, 75] },
+            { name: '育苗區', nameEn: 'Seedlings', icon: '🌱', temp: [18, 22], humidity: [80, 95] }
         ];
-        
-        const zones = [
-            { name: '葉菜 / Leaf', icon: '🥬', temp: [18, 24], humidity: [70, 85] },
-            { name: '果菜 / Fruit', icon: '🍅', temp: [22, 28], humidity: [60, 75] },
-            { name: '育苗 / Seedling', icon: '🌱', temp: [18, 22], humidity: [80, 95] }
-        ];
-        
-        let aquaData = [];
+
+        const COLORS = {
+            zones: ['#60a5fa', '#4ade80', '#fbbf24'],
+            zonesDim: ['rgba(96,165,250,0.2)', 'rgba(74,222,128,0.2)', 'rgba(251,191,36,0.2)']
+        };
+
+        const METRIC_CONFIG = {
+            temp:      { label: '溫度', unit: '°C', color: '#60a5fa', min: 10, max: 40 },
+            humidity:  { label: '濕度', unit: '%',  color: '#4ade80', min: 40,  max: 100 },
+            co2:       { label: 'CO₂', unit: 'ppm', color: '#fbbf24', min: 200, max: 1000 },
+            light:     { label: '光照', unit: 'k lux', color: '#a78bfa', min: 0, max: 30 }
+        };
+
+        const TIME_RANGES = {
+            '30m': 30 * 60 * 1000,
+            '1h':  60 * 60 * 1000,
+            '6h':  6 * 60 * 60 * 1000,
+            '24h': 24 * 60 * 60 * 1000
+        };
+
         let ghData = [];
         let ventMode = 'natural';
-        
-        //  Init
-        function init() {
-            species.forEach((s, i) => {
-                aquaData.push({
-                    ...s,
-                    currentTemp: (s.temp[0] + s.temp[1]) / 2 + (Math.random() - 0.5) * 2,
-                    currentPh: (s.ph[0] + s.ph[1]) / 2 + (Math.random() - 0.5) * 0.3,
-                    currentOxygen: s.oxygen + (Math.random() - 0.5),
-                    ammonia: 0.2 + Math.random() * 0.2,
-                    health: 85 + Math.random() * 15
+        let alerts = [];
+        let historyData = [];
+        let trendChart = null;
+        let chartMetric = 'temp';
+        let chartTimeRange = '30m';
+        let chartZone = -1;
+
+        function randomInRange(min, max) {
+            return min + Math.random() * (max - min);
+        }
+
+        function clamp(val, min, max) {
+            return Math.max(min, Math.min(max, val));
+        }
+
+        function generateZoneData(config) {
+            return {
+                ...config,
+                currentTemp: randomInRange(config.temp[0], config.temp[1]),
+                currentHumidity: randomInRange(config.humidity[0], config.humidity[1]),
+                co2: randomInRange(400, 800),
+                light: randomInRange(10000, 25000),
+                prevTemp: null,
+                prevHumidity: null
+            };
+        }
+
+        function getZoneStatus(zone) {
+            const tempLow = zone.temp[0] - 2;
+            const tempHigh = zone.temp[1] + 2;
+            if (zone.currentTemp < tempLow || zone.currentTemp > tempHigh) return 'danger';
+            if (zone.currentTemp < zone.temp[0] || zone.currentTemp > zone.temp[1]) return 'warning';
+            return 'normal';
+        }
+
+        function getStatusLabel(status) {
+            return { normal: '正常', warning: '注意', danger: '異常' }[status] || '正常';
+        }
+
+        function getTrend(current, prev) {
+            if (prev === null || prev === undefined) return 'flat';
+            const diff = current - prev;
+            if (Math.abs(diff) < 0.1) return 'flat';
+            return diff > 0 ? 'up' : 'down';
+        }
+
+        function getTrendIcon(trend) {
+            return { up: '↑', down: '↓', flat: '→' }[trend] || '→';
+        }
+
+        // ===== History & Sparkline =====
+        function recordHistory() {
+            const point = { time: Date.now(), zones: ghData.map(d => ({
+                temp: d.currentTemp,
+                humidity: d.currentHumidity,
+                co2: d.co2,
+                light: d.light
+            }))};
+            historyData.push(point);
+            const cutoff = Date.now() - TIME_RANGES['24h'];
+            while (historyData.length > 0 && historyData[0].time < cutoff) {
+                historyData.shift();
+            }
+        }
+
+        function getHistorySlice(metric, zoneIdx, rangeMs) {
+            const cutoff = Date.now() - rangeMs;
+            const slice = historyData.filter(p => p.time >= cutoff);
+            if (zoneIdx === -1) {
+                return {
+                    datasets: zoneConfig.map((z, zi) => ({
+                        label: z.name,
+                        data: slice.map(p => ({
+                            x: p.time,
+                            y: metric === 'light' ? p.zones[zi][metric] / 1000 : p.zones[zi][metric]
+                        })),
+                        borderColor: COLORS.zones[zi],
+                        backgroundColor: COLORS.zonesDim[zi],
+                        borderWidth: 1.5,
+                        pointRadius: 0,
+                        tension: 0.3,
+                        fill: false
+                    }))
+                };
+            }
+            return {
+                datasets: [{
+                    label: zoneConfig[zoneIdx].name,
+                    data: slice.map(p => ({
+                        x: p.time,
+                        y: metric === 'light' ? p.zones[zoneIdx][metric] / 1000 : p.zones[zoneIdx][metric]
+                    })),
+                    borderColor: METRIC_CONFIG[metric].color,
+                    backgroundColor: METRIC_CONFIG[metric].color + '33',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.3,
+                    fill: true
+                }]
+            };
+        }
+
+        function drawSparkline(canvas, data, color) {
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width = canvas.offsetWidth * 2;
+            const h = canvas.height = canvas.offsetHeight * 2;
+            ctx.clearRect(0, 0, w, h);
+            if (data.length < 2) return;
+
+            const min = Math.min(...data);
+            const max = Math.max(...data);
+            const range = max - min || 1;
+            const pad = 4;
+
+            ctx.beginPath();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.lineJoin = 'round';
+
+            data.forEach((v, i) => {
+                const x = (i / (data.length - 1)) * w;
+                const y = h - pad - ((v - min) / range) * (h - pad * 2);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+
+            const grad = ctx.createLinearGradient(0, 0, 0, h);
+            grad.addColorStop(0, color + '40');
+            grad.addColorStop(1, color + '00');
+
+            ctx.lineTo(w, h);
+            ctx.lineTo(0, h);
+            ctx.closePath();
+            ctx.fillStyle = grad;
+            ctx.fill();
+        }
+
+        function updateSparklines() {
+            const rangeMs = 30 * 60 * 1000;
+            const cutoff = Date.now() - rangeMs;
+            zoneConfig.forEach((z, zi) => {
+                ['temp', 'humidity', 'co2', 'light'].forEach(metric => {
+                    const canvas = document.getElementById(`spark-${zi}-${metric}`);
+                    if (!canvas) return;
+                    const data = historyData
+                        .filter(p => p.time >= cutoff)
+                        .map(p => metric === 'light' ? p.zones[zi][metric] / 1000 : p.zones[zi][metric]);
+                    drawSparkline(canvas, data, METRIC_CONFIG[metric].color);
                 });
             });
-            
-            zones.forEach((z, i) => {
-                ghData.push({
-                    ...z,
-                    currentTemp: (z.temp[0] + z.temp[1]) / 2 + (Math.random() - 0.5) * 2,
-                    currentHumidity: (z.humidity[0] + z.humidity[1]) / 2 + (Math.random() - 0.5) * 5
-                });
+        }
+
+        // ===== Trend Chart =====
+        function initChart() {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: [], datasets: [] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 300 },
+                    interaction: { intersect: false, mode: 'index' },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: { color: '#8b95a5', font: { size: 11 }, boxWidth: 12, padding: 16 }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1e2533',
+                            titleColor: '#e8eaed',
+                            bodyColor: '#8b95a5',
+                            borderColor: '#2a3345',
+                            borderWidth: 1,
+                            padding: 10,
+                            callbacks: {
+                                title: items => {
+                                    if (!items.length) return '';
+                                    const d = items[0].parsed.x;
+                                    return new Date(d).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+                                },
+                                label: item => ` ${item.dataset.label}: ${item.parsed.y.toFixed(1)} ${METRIC_CONFIG[chartMetric].unit}`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'timeseries',
+                            time: { displayFormats: { minute: 'HH:mm', hour: 'HH:mm' } },
+                            grid: { color: '#2a3345' },
+                            ticks: { color: '#5a6577', font: { size: 10 }, maxTicksLimit: 8 }
+                        },
+                        y: {
+                            grid: { color: '#2a3345' },
+                            ticks: { color: '#5a6577', font: { size: 10 } }
+                        }
+                    }
+                }
             });
-            
-            renderAqua();
-            renderGh();
-            startSimulation();
         }
-        
-        //  Render
-        function renderAqua() {
-            const grid = document.getElementById('aquaGrid');
-            grid.innerHTML = aquaData.map((d, i) => `
-                <div class="pool">
-                    <div class="pool-icon">${d.icon}</div>
-                    <div class="pool-name">${d.name}</div>
-                    <div class="pool-stats">
-                        <div class="pool-stat">水溫 <span id="temp-${i}">${d.currentTemp.toFixed(1)}°</span></div>
-                        <div class="pool-stat">pH <span id="ph-${i}">${d.currentPh.toFixed(1)}</span></div>
-                        <div class="pool-stat">溶氧 <span id="oxy-${i}">${d.currentOxygen.toFixed(1)}</span></div>
-                        <div class="pool-stat">氨氮 <span id="amm-${i}">${d.ammonia.toFixed(2)}</span></div>
-                    </div>
-                    <div class="health-bar">
-                        <div class="health-fill" id="health-${i}" style="width: ${d.health}%"></div>
-                    </div>
-                </div>
+
+        function updateChart() {
+            if (!trendChart) return;
+            const data = getHistorySlice(chartMetric, chartZone, TIME_RANGES[chartTimeRange]);
+            trendChart.data = data;
+            trendChart.options.scales.y.min = METRIC_CONFIG[chartMetric].min;
+            trendChart.options.scales.y.max = METRIC_CONFIG[chartMetric].max;
+            trendChart.update('none');
+        }
+
+        function setTimeRange(range) {
+            chartTimeRange = range;
+            document.querySelectorAll('#timeRangeGroup .chart-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`#timeRangeGroup .chart-btn[onclick="setTimeRange('${range}')"]`).classList.add('active');
+            updateChart();
+        }
+
+        function setMetric(metric) {
+            chartMetric = metric;
+            document.querySelectorAll('#metricGroup .chart-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`#metricGroup .chart-btn[onclick="setMetric('${metric}')"]`).classList.add('active');
+            updateChart();
+        }
+
+        function setChartZone(idx) {
+            chartZone = idx;
+            document.querySelectorAll('#zoneGroup .chart-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            updateChart();
+        }
+
+        function buildZoneButtons() {
+            const group = document.getElementById('zoneGroup');
+            zoneConfig.forEach((z, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'chart-btn';
+                btn.textContent = z.name;
+                btn.onclick = () => setChartZone(i);
+                group.appendChild(btn);
+            });
+        }
+
+        // ===== Alerts =====
+        function addAlert(message, type = 'danger') {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+            alerts.unshift({ time: timeStr, message, type });
+            if (alerts.length > 30) alerts.pop();
+            renderAlerts();
+        }
+
+        function renderAlerts() {
+            const el = document.getElementById('alertList');
+            document.getElementById('alertCount').textContent = `${alerts.length} 筆異常`;
+            if (alerts.length === 0) {
+                el.innerHTML = `<div class="alert-item info"><div><div class="alert-time">${new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })}</div><div class="alert-msg">系統正常運作中</div></div></div>`;
+                return;
+            }
+            el.innerHTML = alerts.slice(0, 15).map(a => `
+                <div class="alert-item ${a.type}"><div><div class="alert-time">${a.time}</div><div class="alert-msg">${a.message}</div></div></div>
             `).join('');
         }
-        
-        function renderGh() {
-            const grid = document.getElementById('ghZones');
-            grid.innerHTML = ghData.map((d, i) => `
-                <div class="zone">
-                    <div class="zone-icon">${d.icon}</div>
-                    <div class="zone-name">${d.name}</div>
-                    <div class="zone-metrics">
-                        <div class="zone-metric">
-                            <div class="zone-metric-value" id="gh-temp-${i}">${d.currentTemp.toFixed(1)}°</div>
-                            <div class="zone-metric-label">溫度 / Temp</div>
+
+        // ===== Render =====
+        function renderZones() {
+            const grid = document.getElementById('zonesGrid');
+            grid.innerHTML = ghData.map((d, i) => {
+                const status = getZoneStatus(d);
+                const tempTrend = getTrend(d.currentTemp, d.prevTemp);
+                const humidTrend = getTrend(d.currentHumidity, d.prevHumidity);
+                const tempPercent = ((d.currentTemp - 10) / 30) * 100;
+                const humidPercent = d.currentHumidity;
+
+                return `
+                    <div class="zone-card ${status === 'danger' ? 'alert' : ''}">
+                        <div class="zone-header">
+                            <div class="zone-name">
+                                <span class="zone-icon">${d.icon}</span>
+                                <span class="zone-label">${d.name}</span>
+                            </div>
+                            <span class="zone-status ${status}">${getStatusLabel(status)}</span>
                         </div>
-                        <div class="zone-metric">
-                            <div class="zone-metric-value" id="gh-hum-${i}">${d.currentHumidity.toFixed(0)}%</div>
-                            <div class="zone-metric-label">濕度 / Humid</div>
+                        <div class="metrics-grid">
+                            <div class="metric">
+                                <div class="metric-top">
+                                    <span class="metric-label">溫度</span>
+                                    <span class="metric-trend ${tempTrend}">${getTrendIcon(tempTrend)}</span>
+                                </div>
+                                <div class="metric-value" id="temp-${i}">${d.currentTemp.toFixed(1)}<span class="metric-unit">°C</span></div>
+                                <div class="metric-bar"><div class="metric-bar-fill temp" style="width: ${clamp(tempPercent, 0, 100)}%"></div></div>
+                                <div class="sparkline-container"><canvas id="spark-${i}-temp"></canvas></div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-top">
+                                    <span class="metric-label">濕度</span>
+                                    <span class="metric-trend ${humidTrend}">${getTrendIcon(humidTrend)}</span>
+                                </div>
+                                <div class="metric-value" id="humid-${i}">${d.currentHumidity.toFixed(0)}<span class="metric-unit">%</span></div>
+                                <div class="metric-bar"><div class="metric-bar-fill humid" style="width: ${clamp(humidPercent, 0, 100)}%"></div></div>
+                                <div class="sparkline-container"><canvas id="spark-${i}-humidity"></canvas></div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-top">
+                                    <span class="metric-label">CO₂</span>
+                                    <span class="metric-trend flat">→</span>
+                                </div>
+                                <div class="metric-value" id="co2-${i}">${d.co2.toFixed(0)}<span class="metric-unit">ppm</span></div>
+                                <div class="metric-bar"><div class="metric-bar-fill co2" style="width: ${clamp((d.co2 / 1000) * 100, 0, 100)}%"></div></div>
+                                <div class="sparkline-container"><canvas id="spark-${i}-co2"></canvas></div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-top">
+                                    <span class="metric-label">光照</span>
+                                    <span class="metric-trend flat">→</span>
+                                </div>
+                                <div class="metric-value" id="light-${i}">${(d.light / 1000).toFixed(1)}<span class="metric-unit">k lux</span></div>
+                                <div class="metric-bar"><div class="metric-bar-fill light" style="width: ${clamp((d.light / 30000) * 100, 0, 100)}%"></div></div>
+                                <div class="sparkline-container"><canvas id="spark-${i}-light"></canvas></div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
+            updateSparklines();
         }
-        
-        //  Simulation
+
+        function updateValues() {
+            ghData.forEach((d, i) => {
+                const el = (id) => document.getElementById(id);
+                if (el(`temp-${i}`)) el(`temp-${i}`).innerHTML = `${d.currentTemp.toFixed(1)}<span class="metric-unit">°C</span>`;
+                if (el(`humid-${i}`)) el(`humid-${i}`).innerHTML = `${d.currentHumidity.toFixed(0)}<span class="metric-unit">%</span>`;
+                if (el(`co2-${i}`)) el(`co2-${i}`).innerHTML = `${d.co2.toFixed(0)}<span class="metric-unit">ppm</span>`;
+                if (el(`light-${i}`)) el(`light-${i}`).innerHTML = `${(d.light / 1000).toFixed(1)}<span class="metric-unit">k lux</span>`;
+            });
+        }
+
+        function updateStats() {
+            const avg = arr => arr.reduce((a, b) => a + b, 0) / arr.length;
+            document.getElementById('avgTemp').textContent = avg(ghData.map(d => d.currentTemp)).toFixed(1);
+            document.getElementById('avgHumid').textContent = avg(ghData.map(d => d.currentHumidity)).toFixed(0);
+            document.getElementById('avgCO2').textContent = avg(ghData.map(d => d.co2)).toFixed(0);
+            document.getElementById('avgLight').textContent = avg(ghData.map(d => d.light / 1000)).toFixed(1);
+        }
+
+        function updateClock() {
+            document.getElementById('currentTime').textContent =
+                new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        // ===== Simulation =====
+        let tickCount = 0;
+
         function startSimulation() {
             setInterval(() => {
-                // Aqua
-                aquaData.forEach((d, i) => {
-                    d.currentTemp += (Math.random() - 0.5) * 0.3;
-                    d.currentTemp = Math.max(d.temp[0] - 2, Math.min(d.temp[1] + 2, d.currentTemp));
-                    d.currentPh += (Math.random() - 0.5) * 0.05;
-                    d.currentPh = Math.max(6, Math.min(9, d.currentPh));
-                    d.currentOxygen += (Math.random() - 0.5) * 0.2;
-                    d.currentOxygen = Math.max(3, Math.min(8, d.currentOxygen));
-                    d.ammonia += (Math.random() - 0.5) * 0.02;
-                    d.ammonia = Math.max(0.1, Math.min(1.5, d.ammonia));
-                    d.health += (Math.random() - 0.5) * 0.5;
-                    d.health = Math.max(50, Math.min(100, d.health));
-                    
-                    document.getElementById(`temp-${i}`).textContent = `${d.currentTemp.toFixed(1)}°`;
-                    document.getElementById(`ph-${i}`).textContent = d.currentPh.toFixed(1);
-                    document.getElementById(`oxy-${i}`).textContent = d.currentOxygen.toFixed(1);
-                    document.getElementById(`amm-${i}`).textContent = d.ammonia.toFixed(2);
-                    document.getElementById(`health-${i}`).style.width = `${d.health}%`;
-                });
-                
-                // Averages
-                const avg = arr => arr.reduce((a, b) => a + b, 0) / arr.length;
-                document.getElementById('avgTemp').textContent = `${avg(aquaData.map(d => d.currentTemp)).toFixed(1)}°`;
-                document.getElementById('avgPh').textContent = avg(aquaData.map(d => d.currentPh)).toFixed(1);
-                document.getElementById('avgOxygen').textContent = avg(aquaData.map(d => d.currentOxygen)).toFixed(1);
-                document.getElementById('avgAmmonia').textContent = avg(aquaData.map(d => d.ammonia)).toFixed(2);
-                
-                // Greenhouse
                 ghData.forEach((d, i) => {
-                    let tempMod = ventMode === 'force' ? -1 : ventMode === 'off' ? 1 : 0;
-                    d.currentTemp += (Math.random() - 0.5) * 0.2 + tempMod * 0.1;
-                    d.currentTemp = Math.max(15, Math.min(35, d.currentTemp));
-                    d.currentHumidity += (Math.random() - 0.5) * 1;
-                    d.currentHumidity = Math.max(50, Math.min(100, d.currentHumidity));
-                    
-                    document.getElementById(`gh-temp-${i}`).textContent = `${d.currentTemp.toFixed(1)}°`;
-                    document.getElementById(`gh-hum-${i}`).textContent = `${d.currentHumidity.toFixed(0)}%`;
+                    const prevStatus = getZoneStatus(d);
+                    d.prevTemp = d.currentTemp;
+                    d.prevHumidity = d.currentHumidity;
+
+                    let tempMod = ventMode === 'force' ? -0.5 : ventMode === 'off' ? 0.5 : 0;
+                    d.currentTemp += (Math.random() - 0.5) * 0.8 + tempMod;
+                    d.currentTemp = clamp(d.currentTemp, d.temp[0] - 3, d.temp[1] + 3);
+
+                    d.currentHumidity += (Math.random() - 0.5) * 3;
+                    d.currentHumidity = clamp(d.currentHumidity, d.humidity[0] - 10, d.humidity[1] + 10);
+
+                    d.co2 += (Math.random() - 0.5) * 50;
+                    d.co2 = clamp(d.co2, 300, 1000);
+
+                    d.light += (Math.random() - 0.5) * 2000;
+                    d.light = clamp(d.light, 5000, 30000);
+
+                    const currentStatus = getZoneStatus(d);
+                    if (prevStatus === 'normal' && currentStatus !== 'normal') {
+                        addAlert(`${d.icon} ${d.name} - ${currentStatus === 'danger' ? '溫度異常' : '溫度偏離理想範圍'}`, currentStatus);
+                    }
                 });
+
+                recordHistory();
+                updateValues();
+                updateStats();
+                try { updateSparklines(); } catch (e) {}
+
+                tickCount++;
+                if (tickCount % 4 === 0) { try { updateChart(); } catch (e) {} }
             }, 1500);
+
+            setInterval(updateClock, 1000);
         }
-        
-        //  Controls
-        function switchTab(name) {
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelector(`.nav-btn[onclick="switchTab('${name}')"]`).classList.add('active');
-            document.getElementById(`tab-${name}`).classList.add('active');
-        }
-        
+
+        // ===== Controls =====
         function setVent(mode) {
             ventMode = mode;
-            document.querySelectorAll('.ctrl-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.control-buttons .ctrl-btn').forEach(b => b.classList.remove('active'));
             document.querySelector(`.ctrl-btn[onclick="setVent('${mode}')"]`).classList.add('active');
-            const names = { natural: '自然通風 / Natural', force: '強制通風 / Force', off: '關閉 / Off' };
-            document.getElementById('ctrlStatus').textContent = `通風 / Vent: ${names[mode]}`;
+            const labels = { natural: '自然', force: '強制', off: '關閉' };
+            document.getElementById('ventMode').textContent = labels[mode];
+            addAlert(`通風系統切換為「${labels[mode]}通風」`, 'info');
         }
-        
-        function updateMisting(v) {
-            document.getElementById('mistingVal').textContent = `${v}%`;
+
+        function updateMisting(v) { document.getElementById('mistingVal').textContent = `${v}%`; }
+        function updateShade(v) { document.getElementById('shadeVal').textContent = `${v}%`; }
+
+        function emergencyStop() {
+            setVent('off');
+            addAlert('緊急停止：所有設備已關閉', 'danger');
         }
-        
-        function updateShade(v) {
-            document.getElementById('shadeVal').textContent = `${v}%`;
+
+        function exportData() {
+            const data = ghData.map(d => ({
+                zone: d.name, temp: d.currentTemp.toFixed(1),
+                humidity: d.currentHumidity.toFixed(0),
+                co2: d.co2.toFixed(0), light: d.light.toFixed(0)
+            }));
+            console.log('Export data:', data);
+            addAlert('數據已匯出至主控台', 'info');
         }
-        
+
+        // ===== Init =====
+        function init() {
+            ghData = zoneConfig.map(generateZoneData);
+            renderZones();
+            renderAlerts();
+            updateStats();
+            updateClock();
+            buildZoneButtons();
+
+            try {
+                initChart();
+            } catch (e) {
+                console.warn('Chart.js init failed:', e);
+            }
+
+            for (let i = 0; i < 60; i++) {
+                ghData.forEach(d => {
+                    d.currentTemp += (Math.random() - 0.5) * 0.8;
+                    d.currentTemp = clamp(d.currentTemp, d.temp[0] - 2, d.temp[1] + 2);
+                    d.currentHumidity += (Math.random() - 0.5) * 2;
+                    d.currentHumidity = clamp(d.currentHumidity, d.humidity[0] - 5, d.humidity[1] + 5);
+                    d.co2 += (Math.random() - 0.5) * 40;
+                    d.co2 = clamp(d.co2, 300, 1000);
+                    d.light += (Math.random() - 0.5) * 1500;
+                    d.light = clamp(d.light, 5000, 30000);
+                });
+                recordHistory();
+            }
+
+            renderZones();
+            try { updateChart(); } catch (e) {}
+            startSimulation();
+        }
+
         init();
     </script>
 </body>
