@@ -73,8 +73,6 @@ athenafarm26/
 ├── index.html                          # 單檔完整應用（Simulator + Event Engine + UI）
 ├── PRD.md                              # 產品需求文件（Event Engine 方向）
 ├── AthenaFarm Simulator PRD v0.1.pdf   # 原始 Simulator PRD
-├── .gitlab-ci.yml                      # CI/CD 配置（GitLab Pages 遺留）
-├── deploy.sh                           # 部署腳本
 └── README.md                           # 本文件
 ```
 
