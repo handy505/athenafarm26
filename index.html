@@ -156,6 +156,7 @@
         }
         .bar-btn:hover { color: var(--text-primary); }
         .bar-btn.active { background: var(--accent); color: var(--bg-primary); font-weight: 600; }
+        .bar-btn .en { opacity: 0.7; font-size: 0.9em; margin-left: 4px; }
 
         .ctrl-round {
             width: 34px; height: 34px;
@@ -539,7 +540,7 @@
             <div class="logo-sub">Digital Farm Event Engine · POC</div>
         </div>
         <div class="topbar-right">
-            <span class="run-badge paused" id="runBadge">待命</span>
+            <span class="run-badge paused" id="runBadge">待命 Standby</span>
             <span class="sim-clock" id="simClock">--:--</span>
         </div>
     </header>
@@ -561,11 +562,11 @@
     </div>
 
     <div class="scenario-bar">
-        <span class="bar-label">Scenario</span>
+        <span class="bar-label">情境 Scenario</span>
         <div class="btn-group" id="scenarioGroup"></div>
-        <button class="ctrl-round" id="playBtn" onclick="togglePlay()" title="播放 / 暫停">▶</button>
-        <button class="ctrl-round" onclick="resetScenario()" title="重播">↺</button>
-        <span class="bar-label">速度</span>
+        <button class="ctrl-round" id="playBtn" onclick="togglePlay()" title="播放/暫停 Play/Pause">▶</button>
+        <button class="ctrl-round" onclick="resetScenario()" title="重播 Replay">↺</button>
+        <span class="bar-label">速度 Speed</span>
         <div class="btn-group" id="speedGroup">
             <button class="bar-btn" onclick="setSpeed(0.5, this)">1×</button>
             <button class="bar-btn active" onclick="setSpeed(1, this)">2×</button>
@@ -575,10 +576,10 @@
     </div>
 
     <nav class="tabs">
-        <button class="tab active" onclick="setTab('live', this)">即時監控</button>
-        <button class="tab" onclick="setTab('timeline', this)">事件時間軸<span class="tab-count" id="eventCount">0</span></button>
-        <button class="tab" onclick="setTab('trace', this)">產銷履歷</button>
-        <button class="tab" onclick="setTab('esg', this)">ESG 碳盤查</button>
+        <button class="tab active" onclick="setTab('live', this)">即時監控 Live</button>
+        <button class="tab" onclick="setTab('timeline', this)">事件時間軸 Timeline<span class="tab-count" id="eventCount">0</span></button>
+        <button class="tab" onclick="setTab('trace', this)">產銷履歷 Traceability</button>
+        <button class="tab" onclick="setTab('esg', this)">ESG 碳盤查 Carbon</button>
         <button class="tab" onclick="setTab('yaml', this)">Scenario YAML</button>
     </nav>
 
@@ -592,7 +593,7 @@
 
         <div class="live-cols">
             <div class="chart-panel">
-                <div class="section-title">環境趨勢（模擬農場時間）</div>
+                <div class="section-title">環境趨勢 / Trend（農場時間 Farm Time）</div>
                 <div class="chart-wrapper"><canvas id="envChart"></canvas></div>
             </div>
             <div class="mqtt-panel">
@@ -606,16 +607,16 @@
     <div class="panel" id="panel-timeline">
         <div class="timeline-cols">
             <div>
-                <div class="section-title">Farm Event Timeline</div>
+                <div class="section-title">事件時間軸 / Farm Event Timeline</div>
                 <div class="timeline" id="timelineList">
-                    <div class="tl-empty">尚無事件 — 播放 Scenario 後，Event Engine 會由 Telemetry 解析出農場事件。</div>
+                    <div class="tl-empty">尚無事件 — 播放 Scenario 後，Event Engine 會由 Telemetry 解析出農場事件。<br>No events yet — play a scenario and the Event Engine will derive farm events from telemetry.</div>
                 </div>
             </div>
             <div class="validate-panel">
-                <div class="section-title">Event Validation</div>
-                <div style="font-size:0.72em;color:var(--text-muted);margin-bottom:8px;">Expected Event vs Actual Event</div>
+                <div class="section-title">事件驗證 / Event Validation</div>
+                <div style="font-size:0.72em;color:var(--text-muted);margin-bottom:8px;">預期事件比對 Expected vs Actual Event</div>
                 <div id="validateList"></div>
-                <div class="validate-summary" id="validateSummary">重播結束後判定</div>
+                <div class="validate-summary" id="validateSummary">重播結束後判定 · Judged after replay</div>
             </div>
         </div>
     </div>
@@ -629,7 +630,7 @@
                         <span class="batch-icon" id="batchIcon">🥒</span>
                         <div>
                             <div class="batch-lot" id="batchLot">--</div>
-                            <div class="batch-sub">產銷履歷批次 · 由 Farm Event 自動生成</div>
+                            <div class="batch-sub">產銷履歷批次 · 由 Farm Event 自動生成<br>Traceability batch · auto-generated from Farm Events</div>
                         </div>
                     </div>
                     <div class="batch-grid" id="batchGrid"></div>
@@ -637,17 +638,17 @@
                 <div class="trace-card">
                     <div class="section-title">履歷紀錄 / Farm Story</div>
                     <table class="trace-table">
-                        <thead><tr><th>時間</th><th>農務事件</th><th>內容</th><th>來源</th></tr></thead>
+                        <thead><tr><th>時間 Time</th><th>農務事件 Event</th><th>內容 Detail</th><th>來源 Source</th></tr></thead>
                         <tbody id="traceBody">
-                            <tr><td colspan="4" style="text-align:center;color:var(--text-muted);">尚無紀錄</td></tr>
+                            <tr><td colspan="4" style="text-align:center;color:var(--text-muted);">尚無紀錄 No records</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
             <div class="qr-card">
-                <div class="section-title">消費者溯源 QR</div>
+                <div class="section-title">消費者溯源 / Consumer QR</div>
                 <div class="qr-box" id="qrBox"></div>
-                <div class="qr-note" id="qrNote">掃描查看本批次完整農場故事<br>（POC：QR 內容為溯源 URL 示意）</div>
+                <div class="qr-note" id="qrNote">掃描查看本批次完整農場故事<br>Scan to view this batch's full farm story<br>（POC：QR 內容為溯源 URL 示意 demo URL）</div>
             </div>
         </div>
     </div>
@@ -658,41 +659,44 @@
         <div class="esg-grid">
             <div class="esg-card">
                 <div class="esg-value" id="esgEnergy">0.00<span class="esg-unit">kWh</span></div>
-                <div class="esg-label">設備用電（由設備事件推算）</div>
+                <div class="esg-label">設備用電（由設備事件推算）<br>Energy · derived from device events</div>
             </div>
             <div class="esg-card">
                 <div class="esg-value" id="esgCarbon">0.000<span class="esg-unit">kgCO₂e</span></div>
-                <div class="esg-label">碳排放（範疇二・電力）</div>
+                <div class="esg-label">碳排放（範疇二・電力）<br>Carbon · Scope 2 electricity</div>
             </div>
             <div class="esg-card">
                 <div class="esg-value" id="esgWater">0<span class="esg-unit">L</span></div>
-                <div class="esg-label">灌溉用水（由灌溉事件推算）</div>
+                <div class="esg-label">灌溉用水（由灌溉事件推算）<br>Water · derived from irrigation events</div>
             </div>
             <div class="esg-card">
-                <div class="esg-value" id="esgEvents">0<span class="esg-unit">筆</span></div>
-                <div class="esg-label">佐證事件數（可稽核）</div>
+                <div class="esg-value" id="esgEvents">0<span class="esg-unit">筆 events</span></div>
+                <div class="esg-label">佐證事件數（可稽核）<br>Auditable evidence events</div>
             </div>
         </div>
 
         <div class="section-title">排放明細 / Breakdown</div>
         <div class="trace-card" style="margin-bottom:0;">
             <table class="trace-table">
-                <thead><tr><th>設備</th><th>運轉時間</th><th>額定功率</th><th>用電</th><th>碳排</th></tr></thead>
+                <thead><tr><th>設備 Device</th><th>運轉 Runtime</th><th>功率 Power</th><th>用電 Energy</th><th>碳排 Carbon</th></tr></thead>
                 <tbody id="esgBody"></tbody>
             </table>
         </div>
 
         <div class="esg-note">
             計算方法（POC）：碳排 = 設備運轉時間 × 額定功率 × 電力排碳係數 0.494 kgCO₂e/kWh（台電公告值示意）。<br>
-            與傳統 IoT 差異：所有數字由 <b>Farm Event</b>（含起訖時間、原因）推算而得，每一筆排放都有事件佐證，可直接對應 ESG 稽核與產銷履歷揭露。
+            與傳統 IoT 差異：所有數字由 <b>Farm Event</b>（含起訖時間、原因）推算而得，每一筆排放都有事件佐證，可直接對應 ESG 稽核與產銷履歷揭露。<br>
+            Method (POC): carbon = device runtime × rated power × grid emission factor 0.494 kgCO₂e/kWh.
+            Unlike traditional IoT, every figure is derived from a <b>Farm Event</b> with start/end time and reason — audit-ready for ESG reporting and traceability disclosure.
         </div>
     </div>
 
     <!-- ===== YAML ===== -->
     <div class="panel" id="panel-yaml">
-        <div class="section-title">Scenario 定義（YAML）</div>
+        <div class="section-title">Scenario 定義 / Definition（YAML）</div>
         <div style="font-size:0.75em;color:var(--text-muted);margin-bottom:10px;">
-            Scenario 描述「今天農場發生什麼」— 不模擬 Sensor，而是模擬農場行為。新增 Scenario → Replay → Event Engine 分析 → 確認 Event，可整合 CI 做 Event Regression Test。
+            Scenario 描述「今天農場發生什麼」— 不模擬 Sensor，而是模擬農場行為。新增 Scenario → Replay → Event Engine 分析 → 確認 Event，可整合 CI 做 Event Regression Test。<br>
+            A scenario describes "what happens on the farm today" — we simulate farm behavior, not sensors. Add scenario → replay → event-engine analysis → verify events; CI-ready for event regression tests.
         </div>
         <div class="yaml-block" id="yamlBlock"></div>
     </div>
@@ -730,8 +734,9 @@
         const SCENARIOS = {
             morning_co2: {
                 title: '早晨 CO₂ 累積',
+                titleEn: 'Morning CO₂',
                 desc: 'Morning → CO₂ Rising → Fan ON → CO₂ Recovery → Fan OFF',
-                crop: { icon: '🥒', name: '小黃瓜', lot: 'LOT-A1-260713', zone: '溫室 A 區', planted: '2026-06-01' },
+                crop: { icon: '🥒', name: '小黃瓜', nameEn: 'Cucumber', lot: 'LOT-A1-260713', zone: '溫室 A 區', zoneEn: 'Greenhouse A', planted: '2026-06-01' },
                 start: 360, end: 720, // 06:00 - 12:00
                 keyframes: {
                     temp:  [[360, 24], [540, 31], [720, 33]],
@@ -745,8 +750,9 @@
             },
             irrigation: {
                 title: '乾旱灌溉',
+                titleEn: 'Irrigation',
                 desc: 'Soil Moisture Low → Pump ON → Water Flow → Moisture Recovery',
-                crop: { icon: '🍅', name: '牛番茄', lot: 'LOT-B2-260713', zone: '溫室 B 區', planted: '2026-05-15' },
+                crop: { icon: '🍅', name: '牛番茄', nameEn: 'Beef Tomato', lot: 'LOT-B2-260713', zone: '溫室 B 區', zoneEn: 'Greenhouse B', planted: '2026-05-15' },
                 start: 360, end: 720,
                 keyframes: {
                     temp:  [[360, 26], [720, 31]],
@@ -760,8 +766,9 @@
             },
             pump_failure: {
                 title: '泵浦故障',
+                titleEn: 'Pump Failure',
                 desc: 'Pump ON → No Water Flow → Generate Alarm',
-                crop: { icon: '🍅', name: '牛番茄', lot: 'LOT-B3-260713', zone: '溫室 B 區', planted: '2026-05-15' },
+                crop: { icon: '🍅', name: '牛番茄', nameEn: 'Beef Tomato', lot: 'LOT-B3-260713', zone: '溫室 B 區', zoneEn: 'Greenhouse B', planted: '2026-05-15' },
                 start: 360, end: 720,
                 keyframes: {
                     temp:  [[360, 26], [720, 32]],
@@ -775,8 +782,9 @@
             },
             sensor_failure: {
                 title: '感測器離線',
+                titleEn: 'Sensor Offline',
                 desc: 'Sensor Data Missing → Detect Abnormality → Generate Device Event',
-                crop: { icon: '🥬', name: '結球萵苣', lot: 'LOT-C1-260713', zone: '溫室 C 區', planted: '2026-06-20' },
+                crop: { icon: '🥬', name: '結球萵苣', nameEn: 'Head Lettuce', lot: 'LOT-C1-260713', zone: '溫室 C 區', zoneEn: 'Greenhouse C', planted: '2026-06-20' },
                 start: 360, end: 720,
                 keyframes: {
                     temp:  [[360, 22], [720, 27]],
@@ -791,11 +799,11 @@
         };
 
         const ENV_META = {
-            temp:  { label: '溫度',     unit: '°C',    color: '#60a5fa', min: 10, max: 40,   fmt: v => v.toFixed(1) },
-            humi:  { label: '濕度',     unit: '%',     color: '#4ade80', min: 30, max: 100,  fmt: v => v.toFixed(0) },
-            co2:   { label: 'CO₂',      unit: 'ppm',   color: '#fbbf24', min: 400, max: 2000, fmt: v => v.toFixed(0) },
-            light: { label: '光照',     unit: 'k lux', color: '#a78bfa', min: 0,  max: 30,   fmt: v => v.toFixed(1) },
-            soil:  { label: '土壤濕度', unit: '%',     color: '#34d399', min: 0,  max: 80,   fmt: v => v.toFixed(1) }
+            temp:  { label: '溫度',     labelEn: 'Temp',     unit: '°C',    color: '#60a5fa', min: 10, max: 40,   fmt: v => v.toFixed(1) },
+            humi:  { label: '濕度',     labelEn: 'Humidity', unit: '%',     color: '#4ade80', min: 30, max: 100,  fmt: v => v.toFixed(0) },
+            co2:   { label: 'CO₂',      labelEn: '',         unit: 'ppm',   color: '#fbbf24', min: 400, max: 2000, fmt: v => v.toFixed(0) },
+            light: { label: '光照',     labelEn: 'Light',    unit: 'k lux', color: '#a78bfa', min: 0,  max: 30,   fmt: v => v.toFixed(1) },
+            soil:  { label: '土壤濕度', labelEn: 'Soil',     unit: '%',     color: '#34d399', min: 0,  max: 80,   fmt: v => v.toFixed(1) }
         };
 
         // ===== Simulator State =====
@@ -941,14 +949,14 @@
                 S.missingMin += dt;
                 if (S.missingMin >= 5 && !activeEvent('sensor_offline') && !S.sensorOffline) {
                     S.sensorOffline = true;
-                    openEvent('sensor_offline', '連續 5 分鐘未收到 air01 感測資料', { device: 'air01' });
+                    openEvent('sensor_offline', '連續 5 分鐘未收到感測資料 No data from air01 for 5 min', { device: 'air01' });
                 }
                 return; // 無資料時其餘規則不動作
             }
             if (S.sensorOffline) {
                 S.sensorOffline = false;
                 S.missingMin = 0;
-                closeEvent(activeEvent('sensor_offline'), { note: '資料恢復' });
+                closeEvent(activeEvent('sensor_offline'), { note: '資料恢復 Data restored' });
             }
             S.missingMin = 0;
 
@@ -956,22 +964,22 @@
             const vent = activeEvent('ventilation');
             if (!vent && tele.co2 > 1500) {
                 setDevice('fan', 'ON');
-                openEvent('ventilation', `CO₂ 濃度過高（${tele.co2} ppm > 1500 ppm）`);
+                openEvent('ventilation', `CO₂ 濃度過高 CO₂ high（${tele.co2} ppm > 1500 ppm）`);
             } else if (vent && tele.co2 < 950) {
                 setDevice('fan', 'OFF');
-                closeEvent(vent, { note: `CO₂ 回穩至 ${tele.co2} ppm` });
+                closeEvent(vent, { note: `CO₂ 回穩 recovered（${tele.co2} ppm）` });
             }
 
             // Rule: High Temperature（帶遲滯）
             const ht = activeEvent('high_temp');
-            if (!ht && tele.temp > 34) openEvent('high_temp', `氣溫 ${tele.temp}°C 超過 34°C 上限`);
+            if (!ht && tele.temp > 34) openEvent('high_temp', `氣溫過高 Temp high（${tele.temp}°C > 34°C）`);
             else if (ht && tele.temp < 32) closeEvent(ht);
 
             // Rule: Irrigation — Soil < 30% → Pump ON；Soil > 45% → Pump OFF
             const irr = activeEvent('irrigation');
             if (!irr && !S.irrigationDisabled && tele.soil < 30) {
                 setDevice('pump', 'ON');
-                openEvent('irrigation', `土壤濕度過低（${tele.soil}% < 30%）`);
+                openEvent('irrigation', `土壤濕度過低 Soil moisture low（${tele.soil}% < 30%）`);
             } else if (irr && tele.soil > 45) {
                 setDevice('pump', 'OFF');
                 closeEvent(irr, { water: Math.round((S.simMin - irr.tStart) * DEVICE_SPEC.pump.flowLpm) });
@@ -980,16 +988,16 @@
             // Rule: Pump Failure — Pump ON 且 6 分鐘無水流 → Alarm
             if (S.devices.pump === 'ON' && S.waterFlow === 0 &&
                 S.pumpOnSince !== null && S.simMin - S.pumpOnSince >= 6 && !hasEvent('pump_failure')) {
-                openEvent('pump_failure', '泵浦啟動 6 分鐘後仍偵測不到水流', { device: 'pump01' });
+                openEvent('pump_failure', '泵浦啟動 6 分鐘後仍偵測不到水流 No water flow 6 min after pump start', { device: 'pump01' });
                 setDevice('pump', 'OFF');
                 S.irrigationDisabled = true;
                 const irrEv = activeEvent('irrigation');
-                if (irrEv) { irrEv.sev = 'danger'; closeEvent(irrEv, { note: '因泵浦故障中止', water: 0 }); }
+                if (irrEv) { irrEv.sev = 'danger'; closeEvent(irrEv, { note: '因泵浦故障中止 Aborted: pump failure', water: 0 }); }
             }
 
             // Rule: Soil Critical（故障後土壤持續下降的告警）
             if (tele.soil < 22 && !hasEvent('soil_low')) {
-                openEvent('soil_low', `土壤濕度 ${tele.soil}% 低於安全下限，需人工處理`);
+                openEvent('soil_low', `土壤濕度 ${tele.soil}% 低於安全下限，需人工處理 Soil below safe limit, manual action required`);
             }
         }
 
@@ -1051,7 +1059,7 @@
         function finishScenario() {
             S.running = false;
             S.finished = true;
-            S.events.filter(e => e.status === 'active').forEach(e => closeEvent(e, { note: 'Scenario 結束' }));
+            S.events.filter(e => e.status === 'active').forEach(e => closeEvent(e, { note: 'Scenario 結束 ended' }));
             setDevice('fan', 'OFF');
             setDevice('pump', 'OFF');
             document.getElementById('playBtn').textContent = '▶';
@@ -1113,9 +1121,9 @@
 
         function renderBadge() {
             const b = document.getElementById('runBadge');
-            if (S.finished) { b.className = 'run-badge done'; b.textContent = '重播完成'; }
-            else if (S.running) { b.className = 'run-badge running'; b.textContent = `重播中 · ${S.sc.title}`; }
-            else { b.className = 'run-badge paused'; b.textContent = '已暫停'; }
+            if (S.finished) { b.className = 'run-badge done'; b.textContent = '重播完成 Completed'; }
+            else if (S.running) { b.className = 'run-badge running'; b.textContent = `重播中 Replaying · ${S.sc.title} ${S.sc.titleEn}`; }
+            else { b.className = 'run-badge paused'; b.textContent = '已暫停 Paused'; }
         }
 
         function renderEnv() {
@@ -1128,7 +1136,7 @@
                 const pct = offline ? 0 : Math.max(0, Math.min(100, (v - m.min) / (m.max - m.min) * 100));
                 return `
                     <div class="env-card ${offline ? 'offline' : ''}">
-                        <div class="env-label">${m.label}${offline ? ' · 離線' : ''}</div>
+                        <div class="env-label">${m.label}${m.labelEn ? ' ' + m.labelEn : ''}${offline ? ' · 離線 Offline' : ''}</div>
                         <div class="env-value">${offline ? '--' : m.fmt(v)}<span class="env-unit">${m.unit}</span></div>
                         <div class="env-bar"><div class="env-bar-fill" style="width:${pct}%;background:${m.color}"></div></div>
                     </div>`;
@@ -1143,13 +1151,13 @@
                 const on = S.devices[k] === 'ON';
                 const fault = k === 'pump' && pumpFault;
                 const runMin = k === 'fan' ? S.esg.fanMin : S.esg.pumpMin;
-                const extra = k === 'pump' ? ` · 水流 ${S.waterFlow} L/min` : '';
+                const extra = k === 'pump' ? ` · 水流 Flow ${S.waterFlow} L/min` : '';
                 return `
                     <div class="device-card ${fault ? 'fault' : on ? 'on' : ''}">
                         <span class="device-icon">${d.icon}</span>
                         <div class="device-info">
                             <div class="device-name">${d.name}</div>
-                            <div class="device-meta">累計運轉 ${Math.round(runMin)} 分${extra}</div>
+                            <div class="device-meta">累計運轉 Runtime ${Math.round(runMin)} min${extra}</div>
                         </div>
                         <span class="device-state ${fault ? 'fault' : on ? 'on' : 'off'}">${fault ? 'FAULT' : S.devices[k]}</span>
                     </div>`;
@@ -1160,22 +1168,22 @@
             const list = document.getElementById('timelineList');
             document.getElementById('eventCount').textContent = S.events.length;
             if (S.events.length === 0) {
-                list.innerHTML = '<div class="tl-empty">尚無事件 — 播放 Scenario 後，Event Engine 會由 Telemetry 解析出農場事件。</div>';
+                list.innerHTML = '<div class="tl-empty">尚無事件 — 播放 Scenario 後，Event Engine 會由 Telemetry 解析出農場事件。<br>No events yet — play a scenario and the Event Engine will derive farm events from telemetry.</div>';
                 return;
             }
             list.innerHTML = [...S.events].reverse().map(e => {
-                const dur = e.tEnd !== null ? `${Math.round(e.tEnd - e.tStart)} 分鐘` : '進行中';
+                const dur = e.tEnd !== null ? `${Math.round(e.tEnd - e.tStart)} 分鐘 min` : '進行中 active';
                 const range = e.tEnd !== null ? `${fmtTime(e.tStart)} – ${fmtTime(e.tEnd)}` : `${fmtTime(e.tStart)} –`;
                 const cls = e.status === 'active' ? 'active' : e.sev;
                 const badge = e.sev === 'danger'
                     ? '<span class="tl-badge danger">ALERT</span>'
                     : e.status === 'active'
-                        ? '<span class="tl-badge active">進行中</span>'
-                        : '<span class="tl-badge done">已完成</span>';
+                        ? '<span class="tl-badge active">進行中 Active</span>'
+                        : '<span class="tl-badge done">已完成 Done</span>';
                 const metaBits = [];
-                if (e.meta.water !== undefined) metaBits.push(`用水 ${e.meta.water.toLocaleString()} L`);
+                if (e.meta.water !== undefined) metaBits.push(`用水 Water ${e.meta.water.toLocaleString()} L`);
                 if (e.meta.note) metaBits.push(e.meta.note);
-                if (e.meta.device) metaBits.push(`設備：${e.meta.device}`);
+                if (e.meta.device) metaBits.push(`設備 Device: ${e.meta.device}`);
                 return `
                     <div class="tl-item ${cls}">
                         <div class="tl-head">
@@ -1183,7 +1191,7 @@
                             ${badge}
                         </div>
                         <div class="tl-time">${range}（${dur}）</div>
-                        <div class="tl-reason">原因：${e.reason}</div>
+                        <div class="tl-reason">原因 Reason：${e.reason}</div>
                         ${metaBits.length ? `<div class="tl-meta">${metaBits.join(' · ')}</div>` : ''}
                     </div>`;
             }).join('');
@@ -1195,7 +1203,7 @@
             const rows = S.sc.expected.map(type => {
                 const occurred = hasEvent(type);
                 const state = occurred ? 'pass' : (S.finished ? 'fail' : 'wait');
-                const label = { pass: 'PASS', fail: 'FAIL', wait: '等待' }[state];
+                const label = { pass: 'PASS', fail: 'FAIL', wait: '等待 WAIT' }[state];
                 return { type, state, html: `
                     <div class="validate-item">
                         <span>${EVENT_TYPES[type].icon} ${EVENT_TYPES[type].title}</span>
@@ -1209,7 +1217,7 @@
                 summary.textContent = allPass ? '✅ Scenario PASS' : '❌ Scenario FAIL';
             } else {
                 summary.className = 'validate-summary';
-                summary.textContent = '重播結束後判定';
+                summary.textContent = '重播結束後判定 · Judged after replay';
             }
         }
 
@@ -1226,25 +1234,25 @@
             document.getElementById('batchIcon').textContent = c.icon;
             document.getElementById('batchLot').textContent = c.lot;
             document.getElementById('batchGrid').innerHTML = `
-                <div class="batch-field"><div class="bf-label">作物</div><div class="bf-value">${c.name}</div></div>
-                <div class="batch-field"><div class="bf-label">場域</div><div class="bf-value">${c.zone}</div></div>
-                <div class="batch-field"><div class="bf-label">定植日</div><div class="bf-value">${c.planted}</div></div>
-                <div class="batch-field"><div class="bf-label">紀錄日</div><div class="bf-value">2026-07-13</div></div>
-                <div class="batch-field"><div class="bf-label">碳足跡</div><div class="bf-value">${esgCarbon().toFixed(3)} kgCO₂e</div></div>
-                <div class="batch-field"><div class="bf-label">灌溉用水</div><div class="bf-value">${Math.round(S.esg.waterL).toLocaleString()} L</div></div>`;
+                <div class="batch-field"><div class="bf-label">作物 Crop</div><div class="bf-value">${c.name} ${c.nameEn}</div></div>
+                <div class="batch-field"><div class="bf-label">場域 Zone</div><div class="bf-value">${c.zone} ${c.zoneEn}</div></div>
+                <div class="batch-field"><div class="bf-label">定植日 Planted</div><div class="bf-value">${c.planted}</div></div>
+                <div class="batch-field"><div class="bf-label">紀錄日 Recorded</div><div class="bf-value">2026-07-13</div></div>
+                <div class="batch-field"><div class="bf-label">碳足跡 Carbon</div><div class="bf-value">${esgCarbon().toFixed(3)} kgCO₂e</div></div>
+                <div class="batch-field"><div class="bf-label">灌溉用水 Water</div><div class="bf-value">${Math.round(S.esg.waterL).toLocaleString()} L</div></div>`;
 
             const body = document.getElementById('traceBody');
             const rows = S.events.filter(e => EVENT_TYPES[e.type].trace);
             if (rows.length === 0) {
-                body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);">尚無紀錄 — 事件發生後自動寫入履歷</td></tr>';
+                body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);">尚無紀錄 — 事件發生後自動寫入履歷 · Auto-recorded when events occur</td></tr>';
                 return;
             }
             body.innerHTML = rows.map(e => {
                 let detail = e.reason;
                 if (e.type === 'irrigation' && e.meta.water !== undefined)
-                    detail = `灌溉 ${Math.round((e.tEnd ?? S.simMin) - e.tStart)} 分鐘，用水 ${e.meta.water.toLocaleString()} L`;
+                    detail = `灌溉 Irrigated ${Math.round((e.tEnd ?? S.simMin) - e.tStart)} min · 用水 Water ${e.meta.water.toLocaleString()} L`;
                 if (e.type === 'ventilation' && e.tEnd !== null)
-                    detail = `通風 ${Math.round(e.tEnd - e.tStart)} 分鐘（${e.reason}）`;
+                    detail = `通風 Ventilated ${Math.round(e.tEnd - e.tStart)} min（${e.reason}）`;
                 const range = e.tEnd !== null ? `${fmtTime(e.tStart)}–${fmtTime(e.tEnd)}` : `${fmtTime(e.tStart)}–`;
                 return `<tr><td>${range}</td><td>${e.icon} ${e.title}</td><td>${detail}</td><td>Event Engine</td></tr>`;
             }).join('');
@@ -1262,10 +1270,10 @@
             document.getElementById('esgEnergy').innerHTML = `${totalKwh.toFixed(2)}<span class="esg-unit">kWh</span>`;
             document.getElementById('esgCarbon').innerHTML = `${(totalKwh * GRID_FACTOR).toFixed(3)}<span class="esg-unit">kgCO₂e</span>`;
             document.getElementById('esgWater').innerHTML = `${Math.round(S.esg.waterL).toLocaleString()}<span class="esg-unit">L</span>`;
-            document.getElementById('esgEvents').innerHTML = `${S.events.length}<span class="esg-unit">筆</span>`;
+            document.getElementById('esgEvents').innerHTML = `${S.events.length}<span class="esg-unit">筆 events</span>`;
             document.getElementById('esgBody').innerHTML = `
-                <tr><td>🌀 排風扇 fan01</td><td>${Math.round(S.esg.fanMin)} 分鐘</td><td>${DEVICE_SPEC.fan.kw} kW</td><td>${fanKwh.toFixed(2)} kWh</td><td>${(fanKwh * GRID_FACTOR).toFixed(3)} kg</td></tr>
-                <tr><td>💧 泵浦 pump01</td><td>${Math.round(S.esg.pumpMin)} 分鐘</td><td>${DEVICE_SPEC.pump.kw} kW</td><td>${pumpKwh.toFixed(2)} kWh</td><td>${(pumpKwh * GRID_FACTOR).toFixed(3)} kg</td></tr>`;
+                <tr><td>🌀 排風扇 Fan · fan01</td><td>${Math.round(S.esg.fanMin)} min</td><td>${DEVICE_SPEC.fan.kw} kW</td><td>${fanKwh.toFixed(2)} kWh</td><td>${(fanKwh * GRID_FACTOR).toFixed(3)} kg</td></tr>
+                <tr><td>💧 泵浦 Pump · pump01</td><td>${Math.round(S.esg.pumpMin)} min</td><td>${DEVICE_SPEC.pump.kw} kW</td><td>${pumpKwh.toFixed(2)} kWh</td><td>${(pumpKwh * GRID_FACTOR).toFixed(3)} kg</td></tr>`;
         }
 
         function renderQR() {
@@ -1321,8 +1329,8 @@ ${sc.expected.map(e => `  - ${e}`).join('\n')}`;
                         labels: [],
                         datasets: [
                             { label: 'CO₂ (ppm)', data: [], borderColor: '#fbbf24', backgroundColor: 'rgba(251,191,36,0.1)', yAxisID: 'y', borderWidth: 1.5, pointRadius: 0, tension: 0.3 },
-                            { label: '溫度 (°C)', data: [], borderColor: '#60a5fa', yAxisID: 'y2', borderWidth: 1.5, pointRadius: 0, tension: 0.3 },
-                            { label: '土壤濕度 (%)', data: [], borderColor: '#34d399', yAxisID: 'y2', borderWidth: 1.5, pointRadius: 0, tension: 0.3 }
+                            { label: '溫度 Temp (°C)', data: [], borderColor: '#60a5fa', yAxisID: 'y2', borderWidth: 1.5, pointRadius: 0, tension: 0.3 },
+                            { label: '土壤濕度 Soil (%)', data: [], borderColor: '#34d399', yAxisID: 'y2', borderWidth: 1.5, pointRadius: 0, tension: 0.3 }
                         ]
                     },
                     options: {
@@ -1379,7 +1387,7 @@ ${sc.expected.map(e => `  - ${e}`).join('\n')}`;
         function buildScenarioButtons() {
             const group = document.getElementById('scenarioGroup');
             group.innerHTML = Object.entries(SCENARIOS).map(([key, sc]) =>
-                `<button class="bar-btn" data-key="${key}" onclick="loadScenario('${key}')" title="${sc.desc}">${sc.title}</button>`
+                `<button class="bar-btn" data-key="${key}" onclick="loadScenario('${key}')" title="${sc.desc}">${sc.title}<span class="en">${sc.titleEn}</span></button>`
             ).join('');
         }
 
