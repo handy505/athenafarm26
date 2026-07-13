@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AthenaFarm26 - 智慧溫室監控</title>
+    <title>AthenaFarm - Digital Farm Event Engine</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -39,6 +39,7 @@
             line-height: 1.5;
         }
 
+        /* ===== Topbar ===== */
         .topbar {
             display: flex;
             align-items: center;
@@ -51,1106 +52,1340 @@
             z-index: 100;
         }
 
-        .topbar-left {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
+        .topbar-left { display: flex; align-items: center; gap: 16px; }
 
         .logo {
-            font-size: 1.1em;
+            font-size: 1.05em;
             font-weight: 700;
             color: var(--accent);
             letter-spacing: 0.05em;
         }
 
-        .topbar-status {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.8em;
-            color: var(--text-secondary);
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--accent);
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+        .logo-sub {
+            font-size: 0.75em;
+            color: var(--text-muted);
+            border-left: 1px solid var(--border);
+            padding-left: 14px;
         }
 
         .topbar-right {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 16px;
             font-size: 0.8em;
             color: var(--text-secondary);
         }
 
-        .topbar-time { font-variant-numeric: tabular-nums; }
-
-        .main {
-            display: grid;
-            grid-template-columns: 1fr 320px;
-            gap: 0;
-            min-height: calc(100vh - 49px);
+        .sim-clock {
+            font-variant-numeric: tabular-nums;
+            font-weight: 600;
+            font-size: 1.15em;
+            color: var(--text-primary);
         }
 
-        .content {
-            padding: 20px;
-            overflow-y: auto;
+        .run-badge {
+            font-size: 0.85em;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-weight: 500;
         }
+        .run-badge.running { background: var(--accent-dim); color: var(--accent); }
+        .run-badge.paused  { background: var(--warning-dim); color: var(--warning); }
+        .run-badge.done    { background: var(--info-dim); color: var(--info); }
 
-        .section-header {
+        /* ===== Pipeline strip ===== */
+        .pipeline {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            margin-bottom: 16px;
+            gap: 6px;
+            padding: 10px 24px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+            font-size: 0.72em;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+        .pipe-node {
+            padding: 3px 10px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--bg-card);
+            color: var(--text-secondary);
+        }
+        .pipe-node.hot { border-color: var(--accent); color: var(--accent); }
+        .pipe-arrow { color: var(--text-muted); }
+
+        /* ===== Scenario bar ===== */
+        .scenario-bar {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            padding: 14px 24px;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
         }
 
-        .section-title {
+        .bar-label {
+            font-size: 0.72em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            padding: 3px;
+            flex-wrap: wrap;
+        }
+
+        .bar-btn {
+            padding: 6px 12px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 0.78em;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        .bar-btn:hover { color: var(--text-primary); }
+        .bar-btn.active { background: var(--accent); color: var(--bg-primary); font-weight: 600; }
+
+        .ctrl-round {
+            width: 34px; height: 34px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .ctrl-round:hover { border-color: var(--accent); }
+
+        .progress-track {
+            flex: 1;
+            min-width: 120px;
+            height: 6px;
+            background: var(--bg-card);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--accent);
+            border-radius: 3px;
+            transition: width 0.2s linear;
+        }
+
+        /* ===== Tabs ===== */
+        .tabs {
+            display: flex;
+            gap: 2px;
+            padding: 0 24px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+        }
+        .tab {
+            padding: 12px 18px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 0.82em;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .tab:hover { color: var(--text-primary); }
+        .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+        .tab .tab-count {
+            display: inline-block;
+            min-width: 18px;
+            padding: 0 5px;
+            margin-left: 6px;
+            border-radius: 9px;
+            background: var(--bg-card);
             font-size: 0.85em;
+            text-align: center;
+        }
+
+        .panel { display: none; padding: 20px 24px; }
+        .panel.active { display: block; }
+
+        .section-title {
+            font-size: 0.8em;
             font-weight: 600;
             color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.08em;
+            margin: 4px 0 12px;
         }
 
-        /* Zone Cards */
-        .zones-grid {
+        /* ===== Live: env metrics ===== */
+        .env-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
             gap: 12px;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
-
-        .zone-card {
+        .env-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 16px;
-            transition: all 0.2s;
+            padding: 14px 16px;
         }
-
-        .zone-card:hover {
-            background: var(--bg-card-hover);
-            border-color: var(--accent);
-        }
-
-        .zone-card.alert {
-            border-color: var(--danger);
-            background: var(--danger-dim);
-        }
-
-        .zone-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
-        }
-
-        .zone-name {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .zone-icon { font-size: 1.4em; }
-        .zone-label { font-size: 0.9em; font-weight: 500; }
-
-        .zone-status {
-            font-size: 0.7em;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-weight: 500;
-        }
-
-        .zone-status.normal { background: var(--accent-dim); color: var(--accent); }
-        .zone-status.warning { background: var(--warning-dim); color: var(--warning); }
-        .zone-status.danger { background: var(--danger-dim); color: var(--danger); }
-
-        /* Metrics */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .metric {
-            background: var(--bg-primary);
-            border-radius: 6px;
-            padding: 10px 12px;
-        }
-
-        .metric-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 4px;
-        }
-
-        .metric-label {
+        .env-card.offline { border-color: var(--warning); background: var(--warning-dim); }
+        .env-label {
             font-size: 0.7em;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            margin-bottom: 4px;
         }
-
-        .metric-trend {
-            font-size: 0.65em;
-            display: flex;
-            align-items: center;
-            gap: 2px;
-        }
-
-        .metric-trend.up { color: var(--danger); }
-        .metric-trend.down { color: var(--info); }
-        .metric-trend.flat { color: var(--text-muted); }
-
-        .metric-value {
-            font-size: 1.4em;
+        .env-value {
+            font-size: 1.6em;
             font-weight: 600;
             font-variant-numeric: tabular-nums;
         }
+        .env-unit { font-size: 0.55em; color: var(--text-secondary); font-weight: 400; margin-left: 3px; }
+        .env-bar { height: 3px; background: var(--border); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+        .env-bar-fill { height: 100%; border-radius: 2px; transition: width 0.4s; }
 
-        .metric-unit {
-            font-size: 0.7em;
-            color: var(--text-secondary);
-            font-weight: 400;
+        /* ===== Devices ===== */
+        .device-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
         }
-
-        .metric-bar {
-            height: 3px;
-            background: var(--border);
-            border-radius: 2px;
-            margin-top: 8px;
-            overflow: hidden;
+        .device-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
         }
-
-        .metric-bar-fill {
-            height: 100%;
-            border-radius: 2px;
-            transition: width 0.5s;
+        .device-card.on { border-color: var(--accent); }
+        .device-card.fault { border-color: var(--danger); background: var(--danger-dim); }
+        .device-icon { font-size: 1.8em; }
+        .device-info { flex: 1; }
+        .device-name { font-size: 0.85em; font-weight: 500; }
+        .device-meta { font-size: 0.72em; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+        .device-state {
+            font-size: 0.72em;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-weight: 600;
         }
+        .device-state.on  { background: var(--accent-dim); color: var(--accent); }
+        .device-state.off { background: var(--bg-primary); color: var(--text-muted); }
+        .device-state.fault { background: var(--danger-dim); color: var(--danger); }
 
-        .metric-bar-fill.temp { background: var(--info); }
-        .metric-bar-fill.humid { background: var(--accent); }
-        .metric-bar-fill.co2 { background: var(--warning); }
-        .metric-bar-fill.light { background: var(--purple); }
-
-        /* Sparkline */
-        .sparkline-container {
-            height: 28px;
-            margin-top: 6px;
-        }
-
-        .sparkline-container canvas {
-            width: 100%;
-            height: 100%;
-        }
-
-        /* Chart Panel */
-        .chart-section {
-            margin-bottom: 24px;
+        .live-cols {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 16px;
         }
 
         .chart-panel {
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 20px;
+            padding: 16px;
         }
+        .chart-wrapper { position: relative; height: 260px; }
 
-        .chart-controls {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
-            flex-wrap: wrap;
-        }
-
-        .chart-btn-group {
-            display: flex;
-            gap: 4px;
-            background: var(--bg-primary);
-            border-radius: 6px;
-            padding: 3px;
-        }
-
-        .chart-btn {
-            padding: 6px 12px;
-            border: none;
-            background: transparent;
-            color: var(--text-secondary);
-            font-family: inherit;
-            font-size: 0.75em;
-            cursor: pointer;
-            border-radius: 4px;
-            transition: all 0.2s;
-        }
-
-        .chart-btn:hover { color: var(--text-primary); }
-        .chart-btn.active { background: var(--accent); color: var(--bg-primary); font-weight: 500; }
-
-        .chart-label {
-            font-size: 0.75em;
-            color: var(--text-muted);
-        }
-
-        .chart-wrapper {
-            position: relative;
-            height: 280px;
-        }
-
-        /* Controls */
-        .controls-section { margin-bottom: 24px; }
-
-        .controls-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-        }
-
-        .control-card {
+        /* ===== MQTT log ===== */
+        .mqtt-panel {
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 8px;
             padding: 16px;
-        }
-
-        .control-header {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
+            flex-direction: column;
+        }
+        .mqtt-log {
+            flex: 1;
+            max-height: 240px;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Menlo', monospace;
+            font-size: 0.7em;
+            line-height: 1.7;
+        }
+        .mqtt-line { color: var(--text-secondary); word-break: break-all; }
+        .mqtt-topic { color: var(--info); }
+        .mqtt-topic.dev { color: var(--warning); }
+        .mqtt-topic.evt { color: var(--accent); }
+
+        /* ===== Timeline ===== */
+        .timeline-cols {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 16px;
         }
 
-        .control-name { font-size: 0.8em; color: var(--text-secondary); }
+        .timeline {
+            position: relative;
+            padding-left: 24px;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 7px; top: 6px; bottom: 6px;
+            width: 2px;
+            background: var(--border);
+        }
+        .tl-item {
+            position: relative;
+            margin-bottom: 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 16px;
+        }
+        .tl-item::before {
+            content: '';
+            position: absolute;
+            left: -22px; top: 16px;
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: var(--info);
+            border: 2px solid var(--bg-primary);
+        }
+        .tl-item.active::before { background: var(--accent); animation: pulse 1.5s infinite; }
+        .tl-item.warning::before { background: var(--warning); }
+        .tl-item.danger::before { background: var(--danger); }
 
-        .control-mode {
-            font-size: 0.7em;
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+        .tl-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+        .tl-title { font-size: 0.88em; font-weight: 600; }
+        .tl-time { font-size: 0.72em; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+        .tl-reason { font-size: 0.76em; color: var(--text-secondary); margin-top: 4px; }
+        .tl-meta { font-size: 0.72em; color: var(--text-muted); margin-top: 4px; }
+        .tl-badge {
+            font-size: 0.68em;
             padding: 2px 8px;
             border-radius: 4px;
-            background: var(--accent-dim);
-            color: var(--accent);
-        }
-
-        .control-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .ctrl-btn {
-            padding: 8px 12px;
-            border: 1px solid var(--border);
-            background: transparent;
-            color: var(--text-secondary);
-            font-family: inherit;
-            font-size: 0.8em;
-            cursor: pointer;
-            border-radius: 4px;
-            transition: all 0.2s;
-        }
-
-        .ctrl-btn:hover { border-color: var(--accent); color: var(--text-primary); }
-
-        .ctrl-btn.active {
-            background: var(--accent);
-            border-color: var(--accent);
-            color: var(--bg-primary);
             font-weight: 500;
         }
+        .tl-badge.active { background: var(--accent-dim); color: var(--accent); }
+        .tl-badge.done   { background: var(--bg-primary); color: var(--text-muted); }
+        .tl-badge.danger { background: var(--danger-dim); color: var(--danger); }
+        .tl-empty { color: var(--text-muted); font-size: 0.82em; padding: 12px 0; }
 
-        .slider-control {
+        /* ===== Validation ===== */
+        .validate-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            align-self: start;
+        }
+        .validate-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.8em;
+        }
+        .validate-item:last-child { border-bottom: none; }
+        .v-badge { font-size: 0.85em; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+        .v-badge.pass { background: var(--accent-dim); color: var(--accent); }
+        .v-badge.fail { background: var(--danger-dim); color: var(--danger); }
+        .v-badge.wait { background: var(--bg-primary); color: var(--text-muted); }
+        .validate-summary {
+            margin-top: 12px;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 0.85em;
+            font-weight: 600;
+            background: var(--bg-primary);
+            color: var(--text-muted);
+        }
+        .validate-summary.pass { background: var(--accent-dim); color: var(--accent); }
+        .validate-summary.fail { background: var(--danger-dim); color: var(--danger); }
+
+        /* ===== Traceability ===== */
+        .trace-cols {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 16px;
+        }
+        .trace-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+        .batch-head { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+        .batch-icon { font-size: 2.2em; }
+        .batch-lot { font-size: 1.05em; font-weight: 700; letter-spacing: 0.03em; }
+        .batch-sub { font-size: 0.75em; color: var(--text-secondary); }
+        .batch-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+        }
+        .batch-field { background: var(--bg-primary); border-radius: 6px; padding: 10px 12px; }
+        .bf-label { font-size: 0.65em; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        .bf-value { font-size: 0.85em; font-weight: 600; margin-top: 2px; }
+
+        table.trace-table { width: 100%; border-collapse: collapse; font-size: 0.78em; }
+        .trace-table th {
+            text-align: left;
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.9em;
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .trace-table td {
+            padding: 9px 10px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+        .trace-table td:first-child { font-variant-numeric: tabular-nums; color: var(--text-muted); white-space: nowrap; }
+        .trace-table tr:last-child td { border-bottom: none; }
+
+        .qr-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 18px;
+            text-align: center;
+            align-self: start;
+        }
+        .qr-box {
+            display: inline-block;
+            background: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .qr-note { font-size: 0.72em; color: var(--text-muted); }
+
+        /* ===== ESG ===== */
+        .esg-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .esg-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 8px;
             padding: 16px;
         }
-
-        .slider-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-
-        .slider-name { font-size: 0.8em; color: var(--text-secondary); }
-
-        .slider-value {
-            font-size: 0.8em;
-            font-weight: 600;
-            color: var(--accent);
-        }
-
-        input[type="range"] {
-            width: 100%;
-            height: 4px;
-            -webkit-appearance: none;
-            background: var(--border);
-            border-radius: 2px;
-            outline: none;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 14px;
-            height: 14px;
-            background: var(--accent);
-            border-radius: 50%;
-            cursor: pointer;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            background: var(--bg-secondary);
-            border-left: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .sidebar-section {
-            padding: 16px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .sidebar-title {
-            font-size: 0.75em;
-            font-weight: 600;
+        .esg-value { font-size: 1.7em; font-weight: 700; font-variant-numeric: tabular-nums; }
+        .esg-unit { font-size: 0.5em; color: var(--text-secondary); font-weight: 400; margin-left: 4px; }
+        .esg-label { font-size: 0.72em; color: var(--text-muted); margin-top: 4px; }
+        .esg-note {
+            font-size: 0.72em;
             color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            margin-bottom: 12px;
-        }
-
-        .alert-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .alert-item {
-            display: flex;
-            gap: 10px;
-            padding: 10px;
-            background: var(--bg-card);
-            border-radius: 6px;
-            border-left: 3px solid var(--danger);
-        }
-
-        .alert-item.warning { border-left-color: var(--warning); }
-        .alert-item.info { border-left-color: var(--info); }
-
-        .alert-time {
-            font-size: 0.7em;
-            color: var(--text-muted);
-            white-space: nowrap;
-        }
-
-        .alert-msg {
-            font-size: 0.8em;
-            color: var(--text-secondary);
-            line-height: 1.4;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-
-        .stat-item {
-            background: var(--bg-card);
-            border-radius: 6px;
-            padding: 12px;
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 1.2em;
-            font-weight: 600;
-            color: var(--accent);
-            font-variant-numeric: tabular-nums;
-        }
-
-        .stat-label {
-            font-size: 0.65em;
-            color: var(--text-muted);
-            margin-top: 2px;
-        }
-
-        .quick-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .quick-btn {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 12px;
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 6px;
-            color: var(--text-secondary);
-            font-family: inherit;
-            font-size: 0.8em;
-            cursor: pointer;
-            transition: all 0.2s;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-top: 16px;
+            line-height: 1.7;
         }
 
-        .quick-btn:hover { border-color: var(--accent); color: var(--text-primary); }
-        .quick-btn-icon { font-size: 1.1em; }
+        /* ===== YAML ===== */
+        .yaml-block {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 18px;
+            font-family: 'Consolas', 'Menlo', monospace;
+            font-size: 0.78em;
+            line-height: 1.7;
+            color: var(--text-secondary);
+            white-space: pre;
+            overflow-x: auto;
+        }
 
         @media (max-width: 1024px) {
-            .main { grid-template-columns: 1fr; }
-            .sidebar { border-left: none; border-top: 1px solid var(--border); }
+            .live-cols, .timeline-cols, .trace-cols { grid-template-columns: 1fr; }
         }
-
         @media (max-width: 640px) {
-            .zones-grid { grid-template-columns: 1fr; }
-            .controls-grid { grid-template-columns: 1fr; }
-            .topbar { padding: 10px 16px; }
-            .content { padding: 16px; }
-            .chart-controls { flex-direction: column; align-items: flex-start; }
+            .topbar, .scenario-bar, .tabs, .panel, .pipeline { padding-left: 14px; padding-right: 14px; }
+            .logo-sub { display: none; }
         }
     </style>
 </head>
 <body>
     <header class="topbar">
         <div class="topbar-left">
-            <div class="logo">ATHENAFARM26</div>
-            <div class="topbar-status">
-                <span class="status-dot"></span>
-                <span>系統運作中</span>
-            </div>
+            <div class="logo">ATHENAFARM</div>
+            <div class="logo-sub">Digital Farm Event Engine · POC</div>
         </div>
         <div class="topbar-right">
-            <span id="alertCount">0 筆異常</span>
-            <span class="topbar-time" id="currentTime">--:--:--</span>
+            <span class="run-badge paused" id="runBadge">待命</span>
+            <span class="sim-clock" id="simClock">--:--</span>
         </div>
     </header>
 
-    <div class="main">
-        <div class="content">
-            <!-- Zone Cards -->
-            <div class="section-header">
-                <span class="section-title">區域監控 / Zones</span>
-            </div>
-            <div class="zones-grid" id="zonesGrid"></div>
+    <div class="pipeline">
+        <span class="pipe-node" id="pipe-scenario">Scenario</span>
+        <span class="pipe-arrow">→</span>
+        <span class="pipe-node" id="pipe-env">Environment Model</span>
+        <span class="pipe-arrow">→</span>
+        <span class="pipe-node" id="pipe-telemetry">Telemetry</span>
+        <span class="pipe-arrow">→</span>
+        <span class="pipe-node" id="pipe-device">Device Action</span>
+        <span class="pipe-arrow">→</span>
+        <span class="pipe-node" id="pipe-event">Farm Event</span>
+        <span class="pipe-arrow">→</span>
+        <span class="pipe-node" id="pipe-timeline">Farm Timeline</span>
+        <span class="pipe-arrow">→</span>
+        <span class="pipe-node" id="pipe-output">Traceability / ESG</span>
+    </div>
 
-            <!-- Time Series Chart -->
-            <div class="chart-section">
-                <div class="section-header">
-                    <span class="section-title">歷史趨勢 / Trends</span>
-                </div>
-                <div class="chart-panel">
-                    <div class="chart-controls">
-                        <span class="chart-label">時間</span>
-                        <div class="chart-btn-group" id="timeRangeGroup">
-                            <button class="chart-btn active" onclick="setTimeRange('30m')">30m</button>
-                            <button class="chart-btn" onclick="setTimeRange('1h')">1h</button>
-                            <button class="chart-btn" onclick="setTimeRange('6h')">6h</button>
-                            <button class="chart-btn" onclick="setTimeRange('24h')">24h</button>
-                        </div>
-                        <span class="chart-label">指標</span>
-                        <div class="chart-btn-group" id="metricGroup">
-                            <button class="chart-btn active" onclick="setMetric('temp')">溫度</button>
-                            <button class="chart-btn" onclick="setMetric('humidity')">濕度</button>
-                            <button class="chart-btn" onclick="setMetric('co2')">CO₂</button>
-                            <button class="chart-btn" onclick="setMetric('light')">光照</button>
-                        </div>
-                        <span class="chart-label">區域</span>
-                        <div class="chart-btn-group" id="zoneGroup">
-                            <button class="chart-btn active" onclick="setChartZone(-1)">全部</button>
-                        </div>
-                    </div>
-                    <div class="chart-wrapper">
-                        <canvas id="trendChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Controls -->
-            <div class="controls-section">
-                <div class="section-header">
-                    <span class="section-title">設備控制 / Controls</span>
-                </div>
-                <div class="controls-grid">
-                    <div class="control-card">
-                        <div class="control-header">
-                            <span class="control-name">通風系統</span>
-                            <span class="control-mode" id="ventMode">自然</span>
-                        </div>
-                        <div class="control-buttons">
-                            <button class="ctrl-btn active" onclick="setVent('natural')">自然通風</button>
-                            <button class="ctrl-btn" onclick="setVent('force')">強制通風</button>
-                            <button class="ctrl-btn" onclick="setVent('off')">關閉</button>
-                        </div>
-                    </div>
-                    <div class="slider-control">
-                        <div class="slider-header">
-                            <span class="slider-name">霧化系統</span>
-                            <span class="slider-value" id="mistingVal">50%</span>
-                        </div>
-                        <input type="range" id="misting" min="0" max="100" value="50" oninput="updateMisting(this.value)">
-                    </div>
-                    <div class="slider-control">
-                        <div class="slider-header">
-                            <span class="slider-name">遮陽系統</span>
-                            <span class="slider-value" id="shadeVal">30%</span>
-                        </div>
-                        <input type="range" id="shade" min="0" max="100" value="30" oninput="updateShade(this.value)">
-                    </div>
-                </div>
-            </div>
+    <div class="scenario-bar">
+        <span class="bar-label">Scenario</span>
+        <div class="btn-group" id="scenarioGroup"></div>
+        <button class="ctrl-round" id="playBtn" onclick="togglePlay()" title="播放 / 暫停">▶</button>
+        <button class="ctrl-round" onclick="resetScenario()" title="重播">↺</button>
+        <span class="bar-label">速度</span>
+        <div class="btn-group" id="speedGroup">
+            <button class="bar-btn" onclick="setSpeed(0.5, this)">1×</button>
+            <button class="bar-btn active" onclick="setSpeed(1, this)">2×</button>
+            <button class="bar-btn" onclick="setSpeed(3, this)">6×</button>
         </div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
 
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-section">
-                <div class="sidebar-title">即時狀態</div>
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-value" id="avgTemp">--</div>
-                        <div class="stat-label">平均溫度 °C</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="avgHumid">--</div>
-                        <div class="stat-label">平均濕度 %</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="avgCO2">--</div>
-                        <div class="stat-label">平均 CO₂</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="avgLight">--</div>
-                        <div class="stat-label">平均光照 k</div>
-                    </div>
-                </div>
+    <nav class="tabs">
+        <button class="tab active" onclick="setTab('live', this)">即時監控</button>
+        <button class="tab" onclick="setTab('timeline', this)">事件時間軸<span class="tab-count" id="eventCount">0</span></button>
+        <button class="tab" onclick="setTab('trace', this)">產銷履歷</button>
+        <button class="tab" onclick="setTab('esg', this)">ESG 碳盤查</button>
+        <button class="tab" onclick="setTab('yaml', this)">Scenario YAML</button>
+    </nav>
+
+    <!-- ===== Live ===== -->
+    <div class="panel active" id="panel-live">
+        <div class="section-title">環境 / Environment</div>
+        <div class="env-grid" id="envGrid"></div>
+
+        <div class="section-title">設備 / Devices</div>
+        <div class="device-grid" id="deviceGrid"></div>
+
+        <div class="live-cols">
+            <div class="chart-panel">
+                <div class="section-title">環境趨勢（模擬農場時間）</div>
+                <div class="chart-wrapper"><canvas id="envChart"></canvas></div>
             </div>
-
-            <div class="sidebar-section" style="flex: 1; overflow: hidden;">
-                <div class="sidebar-title">異常紀錄</div>
-                <div class="alert-list" id="alertList">
-                    <div class="alert-item info">
-                        <div>
-                            <div class="alert-time">--:--</div>
-                            <div class="alert-msg">系統初始化中...</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="sidebar-section">
-                <div class="sidebar-title">快速操作</div>
-                <div class="quick-actions">
-                    <button class="quick-btn" onclick="emergencyStop()">
-                        <span class="quick-btn-icon">⚠️</span>
-                        <span>緊急停止</span>
-                    </button>
-                    <button class="quick-btn" onclick="exportData()">
-                        <span class="quick-btn-icon">📊</span>
-                        <span>匯出數據</span>
-                    </button>
-                </div>
+            <div class="mqtt-panel">
+                <div class="section-title">MQTT Interface</div>
+                <div class="mqtt-log" id="mqttLog"></div>
             </div>
         </div>
     </div>
 
-    <script>
-        const zoneConfig = [
-            { name: '葉菜區', nameEn: 'Leafy Greens', icon: '🥬', temp: [18, 24], humidity: [70, 85] },
-            { name: '果菜區', nameEn: 'Fruiting Crops', icon: '🍅', temp: [22, 28], humidity: [60, 75] },
-            { name: '育苗區', nameEn: 'Seedlings', icon: '🌱', temp: [18, 22], humidity: [80, 95] }
-        ];
+    <!-- ===== Timeline ===== -->
+    <div class="panel" id="panel-timeline">
+        <div class="timeline-cols">
+            <div>
+                <div class="section-title">Farm Event Timeline</div>
+                <div class="timeline" id="timelineList">
+                    <div class="tl-empty">尚無事件 — 播放 Scenario 後，Event Engine 會由 Telemetry 解析出農場事件。</div>
+                </div>
+            </div>
+            <div class="validate-panel">
+                <div class="section-title">Event Validation</div>
+                <div style="font-size:0.72em;color:var(--text-muted);margin-bottom:8px;">Expected Event vs Actual Event</div>
+                <div id="validateList"></div>
+                <div class="validate-summary" id="validateSummary">重播結束後判定</div>
+            </div>
+        </div>
+    </div>
 
-        const COLORS = {
-            zones: ['#60a5fa', '#4ade80', '#fbbf24'],
-            zonesDim: ['rgba(96,165,250,0.2)', 'rgba(74,222,128,0.2)', 'rgba(251,191,36,0.2)']
-        };
-
-        const METRIC_CONFIG = {
-            temp:      { label: '溫度', unit: '°C', color: '#60a5fa', min: 10, max: 40 },
-            humidity:  { label: '濕度', unit: '%',  color: '#4ade80', min: 40,  max: 100 },
-            co2:       { label: 'CO₂', unit: 'ppm', color: '#fbbf24', min: 200, max: 1000 },
-            light:     { label: '光照', unit: 'k lux', color: '#a78bfa', min: 0, max: 30 }
-        };
-
-        const TIME_RANGES = {
-            '30m': 30 * 60 * 1000,
-            '1h':  60 * 60 * 1000,
-            '6h':  6 * 60 * 60 * 1000,
-            '24h': 24 * 60 * 60 * 1000
-        };
-
-        let ghData = [];
-        let ventMode = 'natural';
-        let alerts = [];
-        let historyData = [];
-        let trendChart = null;
-        let chartMetric = 'temp';
-        let chartTimeRange = '30m';
-        let chartZone = -1;
-
-        function randomInRange(min, max) {
-            return min + Math.random() * (max - min);
-        }
-
-        function clamp(val, min, max) {
-            return Math.max(min, Math.min(max, val));
-        }
-
-        function generateZoneData(config) {
-            return {
-                ...config,
-                currentTemp: randomInRange(config.temp[0], config.temp[1]),
-                currentHumidity: randomInRange(config.humidity[0], config.humidity[1]),
-                co2: randomInRange(400, 800),
-                light: randomInRange(10000, 25000),
-                prevTemp: null,
-                prevHumidity: null
-            };
-        }
-
-        function getZoneStatus(zone) {
-            const tempLow = zone.temp[0] - 2;
-            const tempHigh = zone.temp[1] + 2;
-            if (zone.currentTemp < tempLow || zone.currentTemp > tempHigh) return 'danger';
-            if (zone.currentTemp < zone.temp[0] || zone.currentTemp > zone.temp[1]) return 'warning';
-            return 'normal';
-        }
-
-        function getStatusLabel(status) {
-            return { normal: '正常', warning: '注意', danger: '異常' }[status] || '正常';
-        }
-
-        function getTrend(current, prev) {
-            if (prev === null || prev === undefined) return 'flat';
-            const diff = current - prev;
-            if (Math.abs(diff) < 0.1) return 'flat';
-            return diff > 0 ? 'up' : 'down';
-        }
-
-        function getTrendIcon(trend) {
-            return { up: '↑', down: '↓', flat: '→' }[trend] || '→';
-        }
-
-        // ===== History & Sparkline =====
-        function recordHistory() {
-            const point = { time: Date.now(), zones: ghData.map(d => ({
-                temp: d.currentTemp,
-                humidity: d.currentHumidity,
-                co2: d.co2,
-                light: d.light
-            }))};
-            historyData.push(point);
-            const cutoff = Date.now() - TIME_RANGES['24h'];
-            while (historyData.length > 0 && historyData[0].time < cutoff) {
-                historyData.shift();
-            }
-        }
-
-        function getHistorySlice(metric, zoneIdx, rangeMs) {
-            const cutoff = Date.now() - rangeMs;
-            const slice = historyData.filter(p => p.time >= cutoff);
-            if (zoneIdx === -1) {
-                return {
-                    datasets: zoneConfig.map((z, zi) => ({
-                        label: z.name,
-                        data: slice.map(p => ({
-                            x: p.time,
-                            y: metric === 'light' ? p.zones[zi][metric] / 1000 : p.zones[zi][metric]
-                        })),
-                        borderColor: COLORS.zones[zi],
-                        backgroundColor: COLORS.zonesDim[zi],
-                        borderWidth: 1.5,
-                        pointRadius: 0,
-                        tension: 0.3,
-                        fill: false
-                    }))
-                };
-            }
-            return {
-                datasets: [{
-                    label: zoneConfig[zoneIdx].name,
-                    data: slice.map(p => ({
-                        x: p.time,
-                        y: metric === 'light' ? p.zones[zoneIdx][metric] / 1000 : p.zones[zoneIdx][metric]
-                    })),
-                    borderColor: METRIC_CONFIG[metric].color,
-                    backgroundColor: METRIC_CONFIG[metric].color + '33',
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    tension: 0.3,
-                    fill: true
-                }]
-            };
-        }
-
-        function drawSparkline(canvas, data, color) {
-            const ctx = canvas.getContext('2d');
-            const w = canvas.width = canvas.offsetWidth * 2;
-            const h = canvas.height = canvas.offsetHeight * 2;
-            ctx.clearRect(0, 0, w, h);
-            if (data.length < 2) return;
-
-            const min = Math.min(...data);
-            const max = Math.max(...data);
-            const range = max - min || 1;
-            const pad = 4;
-
-            ctx.beginPath();
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 2;
-            ctx.lineJoin = 'round';
-
-            data.forEach((v, i) => {
-                const x = (i / (data.length - 1)) * w;
-                const y = h - pad - ((v - min) / range) * (h - pad * 2);
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            });
-            ctx.stroke();
-
-            const grad = ctx.createLinearGradient(0, 0, 0, h);
-            grad.addColorStop(0, color + '40');
-            grad.addColorStop(1, color + '00');
-
-            ctx.lineTo(w, h);
-            ctx.lineTo(0, h);
-            ctx.closePath();
-            ctx.fillStyle = grad;
-            ctx.fill();
-        }
-
-        function updateSparklines() {
-            const rangeMs = 30 * 60 * 1000;
-            const cutoff = Date.now() - rangeMs;
-            zoneConfig.forEach((z, zi) => {
-                ['temp', 'humidity', 'co2', 'light'].forEach(metric => {
-                    const canvas = document.getElementById(`spark-${zi}-${metric}`);
-                    if (!canvas) return;
-                    const data = historyData
-                        .filter(p => p.time >= cutoff)
-                        .map(p => metric === 'light' ? p.zones[zi][metric] / 1000 : p.zones[zi][metric]);
-                    drawSparkline(canvas, data, METRIC_CONFIG[metric].color);
-                });
-            });
-        }
-
-        // ===== Trend Chart =====
-        function initChart() {
-            const ctx = document.getElementById('trendChart').getContext('2d');
-            trendChart = new Chart(ctx, {
-                type: 'line',
-                data: { labels: [], datasets: [] },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: { duration: 300 },
-                    interaction: { intersect: false, mode: 'index' },
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top',
-                            labels: { color: '#8b95a5', font: { size: 11 }, boxWidth: 12, padding: 16 }
-                        },
-                        tooltip: {
-                            backgroundColor: '#1e2533',
-                            titleColor: '#e8eaed',
-                            bodyColor: '#8b95a5',
-                            borderColor: '#2a3345',
-                            borderWidth: 1,
-                            padding: 10,
-                            callbacks: {
-                                title: items => {
-                                    if (!items.length) return '';
-                                    const d = items[0].parsed.x;
-                                    return new Date(d).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
-                                },
-                                label: item => ` ${item.dataset.label}: ${item.parsed.y.toFixed(1)} ${METRIC_CONFIG[chartMetric].unit}`
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            type: 'timeseries',
-                            time: { displayFormats: { minute: 'HH:mm', hour: 'HH:mm' } },
-                            grid: { color: '#2a3345' },
-                            ticks: { color: '#5a6577', font: { size: 10 }, maxTicksLimit: 8 }
-                        },
-                        y: {
-                            grid: { color: '#2a3345' },
-                            ticks: { color: '#5a6577', font: { size: 10 } }
-                        }
-                    }
-                }
-            });
-        }
-
-        function updateChart() {
-            if (!trendChart) return;
-            const data = getHistorySlice(chartMetric, chartZone, TIME_RANGES[chartTimeRange]);
-            trendChart.data = data;
-            trendChart.options.scales.y.min = METRIC_CONFIG[chartMetric].min;
-            trendChart.options.scales.y.max = METRIC_CONFIG[chartMetric].max;
-            trendChart.update('none');
-        }
-
-        function setTimeRange(range) {
-            chartTimeRange = range;
-            document.querySelectorAll('#timeRangeGroup .chart-btn').forEach(b => b.classList.remove('active'));
-            document.querySelector(`#timeRangeGroup .chart-btn[onclick="setTimeRange('${range}')"]`).classList.add('active');
-            updateChart();
-        }
-
-        function setMetric(metric) {
-            chartMetric = metric;
-            document.querySelectorAll('#metricGroup .chart-btn').forEach(b => b.classList.remove('active'));
-            document.querySelector(`#metricGroup .chart-btn[onclick="setMetric('${metric}')"]`).classList.add('active');
-            updateChart();
-        }
-
-        function setChartZone(idx) {
-            chartZone = idx;
-            document.querySelectorAll('#zoneGroup .chart-btn').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
-            updateChart();
-        }
-
-        function buildZoneButtons() {
-            const group = document.getElementById('zoneGroup');
-            zoneConfig.forEach((z, i) => {
-                const btn = document.createElement('button');
-                btn.className = 'chart-btn';
-                btn.textContent = z.name;
-                btn.onclick = () => setChartZone(i);
-                group.appendChild(btn);
-            });
-        }
-
-        // ===== Alerts =====
-        function addAlert(message, type = 'danger') {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
-            alerts.unshift({ time: timeStr, message, type });
-            if (alerts.length > 30) alerts.pop();
-            renderAlerts();
-        }
-
-        function renderAlerts() {
-            const el = document.getElementById('alertList');
-            document.getElementById('alertCount').textContent = `${alerts.length} 筆異常`;
-            if (alerts.length === 0) {
-                el.innerHTML = `<div class="alert-item info"><div><div class="alert-time">${new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })}</div><div class="alert-msg">系統正常運作中</div></div></div>`;
-                return;
-            }
-            el.innerHTML = alerts.slice(0, 15).map(a => `
-                <div class="alert-item ${a.type}"><div><div class="alert-time">${a.time}</div><div class="alert-msg">${a.message}</div></div></div>
-            `).join('');
-        }
-
-        // ===== Render =====
-        function renderZones() {
-            const grid = document.getElementById('zonesGrid');
-            grid.innerHTML = ghData.map((d, i) => {
-                const status = getZoneStatus(d);
-                const tempTrend = getTrend(d.currentTemp, d.prevTemp);
-                const humidTrend = getTrend(d.currentHumidity, d.prevHumidity);
-                const tempPercent = ((d.currentTemp - 10) / 30) * 100;
-                const humidPercent = d.currentHumidity;
-
-                return `
-                    <div class="zone-card ${status === 'danger' ? 'alert' : ''}">
-                        <div class="zone-header">
-                            <div class="zone-name">
-                                <span class="zone-icon">${d.icon}</span>
-                                <span class="zone-label">${d.name}</span>
-                            </div>
-                            <span class="zone-status ${status}">${getStatusLabel(status)}</span>
-                        </div>
-                        <div class="metrics-grid">
-                            <div class="metric">
-                                <div class="metric-top">
-                                    <span class="metric-label">溫度</span>
-                                    <span class="metric-trend ${tempTrend}">${getTrendIcon(tempTrend)}</span>
-                                </div>
-                                <div class="metric-value" id="temp-${i}">${d.currentTemp.toFixed(1)}<span class="metric-unit">°C</span></div>
-                                <div class="metric-bar"><div class="metric-bar-fill temp" style="width: ${clamp(tempPercent, 0, 100)}%"></div></div>
-                                <div class="sparkline-container"><canvas id="spark-${i}-temp"></canvas></div>
-                            </div>
-                            <div class="metric">
-                                <div class="metric-top">
-                                    <span class="metric-label">濕度</span>
-                                    <span class="metric-trend ${humidTrend}">${getTrendIcon(humidTrend)}</span>
-                                </div>
-                                <div class="metric-value" id="humid-${i}">${d.currentHumidity.toFixed(0)}<span class="metric-unit">%</span></div>
-                                <div class="metric-bar"><div class="metric-bar-fill humid" style="width: ${clamp(humidPercent, 0, 100)}%"></div></div>
-                                <div class="sparkline-container"><canvas id="spark-${i}-humidity"></canvas></div>
-                            </div>
-                            <div class="metric">
-                                <div class="metric-top">
-                                    <span class="metric-label">CO₂</span>
-                                    <span class="metric-trend flat">→</span>
-                                </div>
-                                <div class="metric-value" id="co2-${i}">${d.co2.toFixed(0)}<span class="metric-unit">ppm</span></div>
-                                <div class="metric-bar"><div class="metric-bar-fill co2" style="width: ${clamp((d.co2 / 1000) * 100, 0, 100)}%"></div></div>
-                                <div class="sparkline-container"><canvas id="spark-${i}-co2"></canvas></div>
-                            </div>
-                            <div class="metric">
-                                <div class="metric-top">
-                                    <span class="metric-label">光照</span>
-                                    <span class="metric-trend flat">→</span>
-                                </div>
-                                <div class="metric-value" id="light-${i}">${(d.light / 1000).toFixed(1)}<span class="metric-unit">k lux</span></div>
-                                <div class="metric-bar"><div class="metric-bar-fill light" style="width: ${clamp((d.light / 30000) * 100, 0, 100)}%"></div></div>
-                                <div class="sparkline-container"><canvas id="spark-${i}-light"></canvas></div>
-                            </div>
+    <!-- ===== Traceability ===== -->
+    <div class="panel" id="panel-trace">
+        <div class="trace-cols">
+            <div>
+                <div class="trace-card">
+                    <div class="batch-head">
+                        <span class="batch-icon" id="batchIcon">🥒</span>
+                        <div>
+                            <div class="batch-lot" id="batchLot">--</div>
+                            <div class="batch-sub">產銷履歷批次 · 由 Farm Event 自動生成</div>
                         </div>
                     </div>
-                `;
-            }).join('');
-            updateSparklines();
+                    <div class="batch-grid" id="batchGrid"></div>
+                </div>
+                <div class="trace-card">
+                    <div class="section-title">履歷紀錄 / Farm Story</div>
+                    <table class="trace-table">
+                        <thead><tr><th>時間</th><th>農務事件</th><th>內容</th><th>來源</th></tr></thead>
+                        <tbody id="traceBody">
+                            <tr><td colspan="4" style="text-align:center;color:var(--text-muted);">尚無紀錄</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="qr-card">
+                <div class="section-title">消費者溯源 QR</div>
+                <div class="qr-box" id="qrBox"></div>
+                <div class="qr-note" id="qrNote">掃描查看本批次完整農場故事<br>（POC：QR 內容為溯源 URL 示意）</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== ESG ===== -->
+    <div class="panel" id="panel-esg">
+        <div class="section-title">批次碳盤查 / Carbon Accounting</div>
+        <div class="esg-grid">
+            <div class="esg-card">
+                <div class="esg-value" id="esgEnergy">0.00<span class="esg-unit">kWh</span></div>
+                <div class="esg-label">設備用電（由設備事件推算）</div>
+            </div>
+            <div class="esg-card">
+                <div class="esg-value" id="esgCarbon">0.000<span class="esg-unit">kgCO₂e</span></div>
+                <div class="esg-label">碳排放（範疇二・電力）</div>
+            </div>
+            <div class="esg-card">
+                <div class="esg-value" id="esgWater">0<span class="esg-unit">L</span></div>
+                <div class="esg-label">灌溉用水（由灌溉事件推算）</div>
+            </div>
+            <div class="esg-card">
+                <div class="esg-value" id="esgEvents">0<span class="esg-unit">筆</span></div>
+                <div class="esg-label">佐證事件數（可稽核）</div>
+            </div>
+        </div>
+
+        <div class="section-title">排放明細 / Breakdown</div>
+        <div class="trace-card" style="margin-bottom:0;">
+            <table class="trace-table">
+                <thead><tr><th>設備</th><th>運轉時間</th><th>額定功率</th><th>用電</th><th>碳排</th></tr></thead>
+                <tbody id="esgBody"></tbody>
+            </table>
+        </div>
+
+        <div class="esg-note">
+            計算方法（POC）：碳排 = 設備運轉時間 × 額定功率 × 電力排碳係數 0.494 kgCO₂e/kWh（台電公告值示意）。<br>
+            與傳統 IoT 差異：所有數字由 <b>Farm Event</b>（含起訖時間、原因）推算而得，每一筆排放都有事件佐證，可直接對應 ESG 稽核與產銷履歷揭露。
+        </div>
+    </div>
+
+    <!-- ===== YAML ===== -->
+    <div class="panel" id="panel-yaml">
+        <div class="section-title">Scenario 定義（YAML）</div>
+        <div style="font-size:0.75em;color:var(--text-muted);margin-bottom:10px;">
+            Scenario 描述「今天農場發生什麼」— 不模擬 Sensor，而是模擬農場行為。新增 Scenario → Replay → Event Engine 分析 → 確認 Event，可整合 CI 做 Event Regression Test。
+        </div>
+        <div class="yaml-block" id="yamlBlock"></div>
+    </div>
+
+    <script>
+        // =====================================================================
+        // Domain Model:
+        //   Scenario → Environment Model → Telemetry → Device Action
+        //     → Farm Event → Farm Timeline → Traceability / ESG
+        // =====================================================================
+
+        const FARM_ID = 'farm01';
+        const TOPIC_TELEMETRY = `athena/${FARM_ID}/telemetry`;
+        const TOPIC_DEVICE    = `athena/${FARM_ID}/device`;
+        const TOPIC_EVENT     = `athena/${FARM_ID}/event`;
+
+        // 台電電力排碳係數（示意）
+        const GRID_FACTOR = 0.494; // kgCO2e / kWh
+        const DEVICE_SPEC = {
+            fan:  { name: '排風扇 Fan',  icon: '🌀', kw: 0.75 },
+            pump: { name: '灌溉泵浦 Pump', icon: '💧', kw: 1.5, flowLpm: 60 }
+        };
+
+        const EVENT_TYPES = {
+            ventilation:    { title: '通風事件 Ventilation',      icon: '🌀', sev: 'info',    trace: true },
+            irrigation:     { title: '灌溉事件 Irrigation',       icon: '💧', sev: 'info',    trace: true },
+            pump_failure:   { title: '泵浦故障 Pump Failure',     icon: '🚨', sev: 'danger',  trace: true },
+            sensor_offline: { title: '感測器離線 Sensor Offline', icon: '📡', sev: 'warning', trace: true },
+            soil_low:       { title: '土壤濕度過低 Soil Alert',   icon: '⚠️', sev: 'warning', trace: true },
+            high_temp:      { title: '高溫警報 High Temp',        icon: '🌡️', sev: 'warning', trace: true }
+        };
+
+        // ===== Built-in Scenarios（PRD §9）=====
+        // keyframes: 環境基準斜率來源；soil 由動態模型（蒸散 + 灌溉）決定
+        const SCENARIOS = {
+            morning_co2: {
+                title: '早晨 CO₂ 累積',
+                desc: 'Morning → CO₂ Rising → Fan ON → CO₂ Recovery → Fan OFF',
+                crop: { icon: '🥒', name: '小黃瓜', lot: 'LOT-A1-260713', zone: '溫室 A 區', planted: '2026-06-01' },
+                start: 360, end: 720, // 06:00 - 12:00
+                keyframes: {
+                    temp:  [[360, 24], [540, 31], [720, 33]],
+                    humi:  [[360, 85], [720, 62]],
+                    co2:   [[360, 820], [510, 1680], [720, 1780]],
+                    light: [[360, 2], [720, 27]]
+                },
+                soilStart: 58, evapRate: 0.03,
+                faults: {},
+                expected: ['ventilation']
+            },
+            irrigation: {
+                title: '乾旱灌溉',
+                desc: 'Soil Moisture Low → Pump ON → Water Flow → Moisture Recovery',
+                crop: { icon: '🍅', name: '牛番茄', lot: 'LOT-B2-260713', zone: '溫室 B 區', planted: '2026-05-15' },
+                start: 360, end: 720,
+                keyframes: {
+                    temp:  [[360, 26], [720, 31]],
+                    humi:  [[360, 72], [720, 55]],
+                    co2:   [[360, 780], [720, 1080]],
+                    light: [[360, 3], [720, 26]]
+                },
+                soilStart: 42, evapRate: 0.18,
+                faults: {},
+                expected: ['irrigation']
+            },
+            pump_failure: {
+                title: '泵浦故障',
+                desc: 'Pump ON → No Water Flow → Generate Alarm',
+                crop: { icon: '🍅', name: '牛番茄', lot: 'LOT-B3-260713', zone: '溫室 B 區', planted: '2026-05-15' },
+                start: 360, end: 720,
+                keyframes: {
+                    temp:  [[360, 26], [720, 32]],
+                    humi:  [[360, 70], [720, 52]],
+                    co2:   [[360, 800], [720, 1100]],
+                    light: [[360, 3], [720, 27]]
+                },
+                soilStart: 42, evapRate: 0.18,
+                faults: { pumpNoFlow: true },
+                expected: ['irrigation', 'pump_failure']
+            },
+            sensor_failure: {
+                title: '感測器離線',
+                desc: 'Sensor Data Missing → Detect Abnormality → Generate Device Event',
+                crop: { icon: '🥬', name: '結球萵苣', lot: 'LOT-C1-260713', zone: '溫室 C 區', planted: '2026-06-20' },
+                start: 360, end: 720,
+                keyframes: {
+                    temp:  [[360, 22], [720, 27]],
+                    humi:  [[360, 82], [720, 70]],
+                    co2:   [[360, 700], [720, 1050]],
+                    light: [[360, 2], [720, 24]]
+                },
+                soilStart: 60, evapRate: 0.03,
+                faults: { sensorGap: [540, 585] }, // 09:00 - 09:45 air sensor 無資料
+                expected: ['sensor_offline']
+            }
+        };
+
+        const ENV_META = {
+            temp:  { label: '溫度',     unit: '°C',    color: '#60a5fa', min: 10, max: 40,   fmt: v => v.toFixed(1) },
+            humi:  { label: '濕度',     unit: '%',     color: '#4ade80', min: 30, max: 100,  fmt: v => v.toFixed(0) },
+            co2:   { label: 'CO₂',      unit: 'ppm',   color: '#fbbf24', min: 400, max: 2000, fmt: v => v.toFixed(0) },
+            light: { label: '光照',     unit: 'k lux', color: '#a78bfa', min: 0,  max: 30,   fmt: v => v.toFixed(1) },
+            soil:  { label: '土壤濕度', unit: '%',     color: '#34d399', min: 0,  max: 80,   fmt: v => v.toFixed(1) }
+        };
+
+        // ===== Simulator State =====
+        let S = null; // runtime state
+
+        function freshState(key) {
+            const sc = SCENARIOS[key];
+            return {
+                key, sc,
+                simMin: sc.start,
+                running: false,
+                finished: false,
+                env: {
+                    temp: kfValue(sc.keyframes.temp, sc.start),
+                    humi: kfValue(sc.keyframes.humi, sc.start),
+                    co2:  kfValue(sc.keyframes.co2, sc.start),
+                    light: kfValue(sc.keyframes.light, sc.start),
+                    soil: sc.soilStart
+                },
+                sensorOffline: false,
+                missingMin: 0,
+                devices: { fan: 'OFF', pump: 'OFF' },
+                waterFlow: 0,
+                pumpOnSince: null,
+                irrigationDisabled: false,
+                events: [],       // Farm Events
+                mqtt: [],
+                lastTelemetryPub: -999,
+                chart: { t: [], co2: [], temp: [], soil: [] },
+                esg: { fanMin: 0, pumpMin: 0, waterL: 0 }
+            };
         }
 
-        function updateValues() {
-            ghData.forEach((d, i) => {
-                const el = (id) => document.getElementById(id);
-                if (el(`temp-${i}`)) el(`temp-${i}`).innerHTML = `${d.currentTemp.toFixed(1)}<span class="metric-unit">°C</span>`;
-                if (el(`humid-${i}`)) el(`humid-${i}`).innerHTML = `${d.currentHumidity.toFixed(0)}<span class="metric-unit">%</span>`;
-                if (el(`co2-${i}`)) el(`co2-${i}`).innerHTML = `${d.co2.toFixed(0)}<span class="metric-unit">ppm</span>`;
-                if (el(`light-${i}`)) el(`light-${i}`).innerHTML = `${(d.light / 1000).toFixed(1)}<span class="metric-unit">k lux</span>`;
-            });
+        // ===== Environment Model =====
+        function kfValue(frames, t) {
+            if (t <= frames[0][0]) return frames[0][1];
+            for (let i = 1; i < frames.length; i++) {
+                if (t <= frames[i][0]) {
+                    const [t0, v0] = frames[i - 1], [t1, v1] = frames[i];
+                    return v0 + (v1 - v0) * (t - t0) / (t1 - t0);
+                }
+            }
+            return frames[frames.length - 1][1];
         }
 
-        function updateStats() {
-            const avg = arr => arr.reduce((a, b) => a + b, 0) / arr.length;
-            document.getElementById('avgTemp').textContent = avg(ghData.map(d => d.currentTemp)).toFixed(1);
-            document.getElementById('avgHumid').textContent = avg(ghData.map(d => d.currentHumidity)).toFixed(0);
-            document.getElementById('avgCO2').textContent = avg(ghData.map(d => d.co2)).toFixed(0);
-            document.getElementById('avgLight').textContent = avg(ghData.map(d => d.light / 1000)).toFixed(1);
+        function kfSlope(frames, t) {
+            for (let i = 1; i < frames.length; i++) {
+                if (t <= frames[i][0]) {
+                    const [t0, v0] = frames[i - 1], [t1, v1] = frames[i];
+                    return (v1 - v0) / (t1 - t0);
+                }
+            }
+            return 0;
         }
 
-        function updateClock() {
-            document.getElementById('currentTime').textContent =
-                new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        function stepEnvironment(dt) {
+            const { sc, env, devices } = S;
+            const t = S.simMin;
+            const noise = amp => (Math.random() - 0.5) * amp;
+
+            env.temp  += kfSlope(sc.keyframes.temp, t) * dt + noise(0.06);
+            env.humi  += kfSlope(sc.keyframes.humi, t) * dt + noise(0.2);
+            env.co2   += kfSlope(sc.keyframes.co2, t) * dt + noise(4);
+            env.light += kfSlope(sc.keyframes.light, t) * dt + noise(0.05);
+
+            // Device Action → 環境回饋
+            if (devices.fan === 'ON') {
+                env.co2 = Math.max(560, env.co2 - 42 * dt);
+                env.temp -= 0.08 * dt;
+            }
+            env.soil -= sc.evapRate * dt;
+            if (devices.pump === 'ON' && S.waterFlow > 0) env.soil += 1.1 * dt;
+            env.soil = Math.max(5, Math.min(80, env.soil));
+            env.humi = Math.max(20, Math.min(100, env.humi));
         }
 
-        // ===== Simulation =====
-        let tickCount = 0;
+        // ===== Telemetry（模擬 Sensor Output，含故障注入）=====
+        function readTelemetry() {
+            const gap = S.sc.faults.sensorGap;
+            const inGap = gap && S.simMin >= gap[0] && S.simMin < gap[1];
+            if (inGap) return { time: fmtTime(S.simMin), device: 'air01', temp: null, humi: null, co2: null, light: null, soil: round1(S.env.soil) };
+            return {
+                time: fmtTime(S.simMin),
+                device: 'air01',
+                temp: round1(S.env.temp),
+                humi: Math.round(S.env.humi),
+                co2: Math.round(S.env.co2),
+                light: round1(S.env.light),
+                soil: round1(S.env.soil)
+            };
+        }
 
-        function startSimulation() {
-            setInterval(() => {
-                ghData.forEach((d, i) => {
-                    const prevStatus = getZoneStatus(d);
-                    d.prevTemp = d.currentTemp;
-                    d.prevHumidity = d.currentHumidity;
+        // ===== Device Control =====
+        function setDevice(dev, state) {
+            if (S.devices[dev] === state) return;
+            S.devices[dev] = state;
+            if (dev === 'pump') {
+                if (state === 'ON') {
+                    S.pumpOnSince = S.simMin;
+                    S.waterFlow = S.sc.faults.pumpNoFlow ? 0 : DEVICE_SPEC.pump.flowLpm;
+                } else {
+                    S.pumpOnSince = null;
+                    S.waterFlow = 0;
+                }
+            }
+            publish(TOPIC_DEVICE, { [dev]: state }, 'dev');
+            flashPipe('pipe-device');
+        }
 
-                    let tempMod = ventMode === 'force' ? -0.5 : ventMode === 'off' ? 0.5 : 0;
-                    d.currentTemp += (Math.random() - 0.5) * 0.8 + tempMod;
-                    d.currentTemp = clamp(d.currentTemp, d.temp[0] - 3, d.temp[1] + 3);
+        // ===== Event Engine（Telemetry → Farm Event）=====
+        function openEvent(type, reason, meta = {}) {
+            const def = EVENT_TYPES[type];
+            const ev = {
+                type, reason, meta,
+                title: def.title, icon: def.icon, sev: def.sev,
+                tStart: S.simMin, tEnd: null, status: 'active'
+            };
+            S.events.push(ev);
+            publish(TOPIC_EVENT, { event: type, status: 'started', reason, time: fmtTime(S.simMin) }, 'evt');
+            flashPipe('pipe-event'); flashPipe('pipe-timeline');
+            return ev;
+        }
 
-                    d.currentHumidity += (Math.random() - 0.5) * 3;
-                    d.currentHumidity = clamp(d.currentHumidity, d.humidity[0] - 10, d.humidity[1] + 10);
+        function closeEvent(ev, meta = {}) {
+            if (!ev || ev.status !== 'active') return;
+            ev.tEnd = S.simMin;
+            ev.status = 'done';
+            Object.assign(ev.meta, meta);
+            publish(TOPIC_EVENT, { event: ev.type, status: 'completed', time: fmtTime(S.simMin) }, 'evt');
+        }
 
-                    d.co2 += (Math.random() - 0.5) * 50;
-                    d.co2 = clamp(d.co2, 300, 1000);
+        function activeEvent(type) {
+            return S.events.find(e => e.type === type && e.status === 'active');
+        }
 
-                    d.light += (Math.random() - 0.5) * 2000;
-                    d.light = clamp(d.light, 5000, 30000);
+        function hasEvent(type) {
+            return S.events.some(e => e.type === type);
+        }
 
-                    const currentStatus = getZoneStatus(d);
-                    if (prevStatus === 'normal' && currentStatus !== 'normal') {
-                        addAlert(`${d.icon} ${d.name} - ${currentStatus === 'danger' ? '溫度異常' : '溫度偏離理想範圍'}`, currentStatus);
-                    }
-                });
+        function runEventEngine(tele, dt) {
+            // Rule: Sensor Failure — Sensor Data Missing → Detect Abnormality → Device Event
+            if (tele.co2 === null) {
+                S.missingMin += dt;
+                if (S.missingMin >= 5 && !activeEvent('sensor_offline') && !S.sensorOffline) {
+                    S.sensorOffline = true;
+                    openEvent('sensor_offline', '連續 5 分鐘未收到 air01 感測資料', { device: 'air01' });
+                }
+                return; // 無資料時其餘規則不動作
+            }
+            if (S.sensorOffline) {
+                S.sensorOffline = false;
+                S.missingMin = 0;
+                closeEvent(activeEvent('sensor_offline'), { note: '資料恢復' });
+            }
+            S.missingMin = 0;
 
-                recordHistory();
-                updateValues();
-                updateStats();
-                try { updateSparklines(); } catch (e) {}
+            // Rule: Ventilation — CO2 > 1500 → Fan ON；CO2 < 950 → Fan OFF
+            const vent = activeEvent('ventilation');
+            if (!vent && tele.co2 > 1500) {
+                setDevice('fan', 'ON');
+                openEvent('ventilation', `CO₂ 濃度過高（${tele.co2} ppm > 1500 ppm）`);
+            } else if (vent && tele.co2 < 950) {
+                setDevice('fan', 'OFF');
+                closeEvent(vent, { note: `CO₂ 回穩至 ${tele.co2} ppm` });
+            }
 
-                tickCount++;
-                if (tickCount % 4 === 0) { try { updateChart(); } catch (e) {} }
-            }, 1500);
+            // Rule: High Temperature（帶遲滯）
+            const ht = activeEvent('high_temp');
+            if (!ht && tele.temp > 34) openEvent('high_temp', `氣溫 ${tele.temp}°C 超過 34°C 上限`);
+            else if (ht && tele.temp < 32) closeEvent(ht);
 
-            setInterval(updateClock, 1000);
+            // Rule: Irrigation — Soil < 30% → Pump ON；Soil > 45% → Pump OFF
+            const irr = activeEvent('irrigation');
+            if (!irr && !S.irrigationDisabled && tele.soil < 30) {
+                setDevice('pump', 'ON');
+                openEvent('irrigation', `土壤濕度過低（${tele.soil}% < 30%）`);
+            } else if (irr && tele.soil > 45) {
+                setDevice('pump', 'OFF');
+                closeEvent(irr, { water: Math.round((S.simMin - irr.tStart) * DEVICE_SPEC.pump.flowLpm) });
+            }
+
+            // Rule: Pump Failure — Pump ON 且 6 分鐘無水流 → Alarm
+            if (S.devices.pump === 'ON' && S.waterFlow === 0 &&
+                S.pumpOnSince !== null && S.simMin - S.pumpOnSince >= 6 && !hasEvent('pump_failure')) {
+                openEvent('pump_failure', '泵浦啟動 6 分鐘後仍偵測不到水流', { device: 'pump01' });
+                setDevice('pump', 'OFF');
+                S.irrigationDisabled = true;
+                const irrEv = activeEvent('irrigation');
+                if (irrEv) { irrEv.sev = 'danger'; closeEvent(irrEv, { note: '因泵浦故障中止', water: 0 }); }
+            }
+
+            // Rule: Soil Critical（故障後土壤持續下降的告警）
+            if (tele.soil < 22 && !hasEvent('soil_low')) {
+                openEvent('soil_low', `土壤濕度 ${tele.soil}% 低於安全下限，需人工處理`);
+            }
+        }
+
+        // ===== ESG Accounting（由設備狀態累計）=====
+        function accountESG(dt) {
+            if (S.devices.fan === 'ON') S.esg.fanMin += dt;
+            if (S.devices.pump === 'ON') {
+                S.esg.pumpMin += dt;
+                S.esg.waterL += S.waterFlow * dt;
+            }
+        }
+
+        // ===== MQTT（POC：in-page bus，Topic 契約與 PRD §10 一致）=====
+        function publish(topic, payload, kind = 'tel') {
+            S.mqtt.push({ t: fmtTime(S.simMin), topic, payload: JSON.stringify(payload), kind });
+            if (S.mqtt.length > 80) S.mqtt.shift();
+        }
+
+        // ===== Simulation Loop =====
+        let timer = null;
+        let speed = 1; // sim-minute per tick（tick = 200ms）
+
+        function tick() {
+            if (!S.running) return;
+            const dt = speed;
+            S.simMin += dt;
+
+            if (S.simMin >= S.sc.end) {
+                S.simMin = S.sc.end;
+                finishScenario();
+                renderAll();
+                return;
+            }
+
+            stepEnvironment(dt);
+            const tele = readTelemetry();
+
+            // Telemetry publish（每 5 sim-min）
+            if (S.simMin - S.lastTelemetryPub >= 5) {
+                publish(TOPIC_TELEMETRY, tele, 'tel');
+                S.lastTelemetryPub = S.simMin;
+                flashPipe('pipe-telemetry');
+            }
+
+            runEventEngine(tele, dt);
+            accountESG(dt);
+
+            // chart sample（每 2 sim-min）
+            if (S.chart.t.length === 0 || S.simMin - S.chart.t[S.chart.t.length - 1] >= 2) {
+                S.chart.t.push(S.simMin);
+                S.chart.co2.push(tele.co2);
+                S.chart.temp.push(tele.temp);
+                S.chart.soil.push(tele.soil);
+            }
+
+            renderAll();
+        }
+
+        function finishScenario() {
+            S.running = false;
+            S.finished = true;
+            S.events.filter(e => e.status === 'active').forEach(e => closeEvent(e, { note: 'Scenario 結束' }));
+            setDevice('fan', 'OFF');
+            setDevice('pump', 'OFF');
+            document.getElementById('playBtn').textContent = '▶';
         }
 
         // ===== Controls =====
-        function setVent(mode) {
-            ventMode = mode;
-            document.querySelectorAll('.control-buttons .ctrl-btn').forEach(b => b.classList.remove('active'));
-            document.querySelector(`.ctrl-btn[onclick="setVent('${mode}')"]`).classList.add('active');
-            const labels = { natural: '自然', force: '強制', off: '關閉' };
-            document.getElementById('ventMode').textContent = labels[mode];
-            addAlert(`通風系統切換為「${labels[mode]}通風」`, 'info');
+        function togglePlay() {
+            if (S.finished) { resetScenario(); }
+            S.running = !S.running;
+            document.getElementById('playBtn').textContent = S.running ? '⏸' : '▶';
+            renderBadge();
         }
 
-        function updateMisting(v) { document.getElementById('mistingVal').textContent = `${v}%`; }
-        function updateShade(v) { document.getElementById('shadeVal').textContent = `${v}%`; }
-
-        function emergencyStop() {
-            setVent('off');
-            addAlert('緊急停止：所有設備已關閉', 'danger');
+        function resetScenario() {
+            loadScenario(S.key, false);
         }
 
-        function exportData() {
-            const data = ghData.map(d => ({
-                zone: d.name, temp: d.currentTemp.toFixed(1),
-                humidity: d.currentHumidity.toFixed(0),
-                co2: d.co2.toFixed(0), light: d.light.toFixed(0)
-            }));
-            console.log('Export data:', data);
-            addAlert('數據已匯出至主控台', 'info');
+        function setSpeed(v, btn) {
+            speed = v;
+            document.querySelectorAll('#speedGroup .bar-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function loadScenario(key, autoplay = true) {
+            S = freshState(key);
+            document.querySelectorAll('#scenarioGroup .bar-btn').forEach(b =>
+                b.classList.toggle('active', b.dataset.key === key));
+            initChart();
+            renderYaml();
+            renderQR();
+            renderAll();
+            if (autoplay) {
+                S.running = true;
+                document.getElementById('playBtn').textContent = '⏸';
+            }
+            renderBadge();
+        }
+
+        // ===== Helpers =====
+        function fmtTime(min) {
+            const h = Math.floor(min / 60), m = Math.floor(min % 60);
+            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        }
+        function round1(v) { return Math.round(v * 10) / 10; }
+
+        function flashPipe(id) {
+            const el = document.getElementById(id);
+            el.classList.add('hot');
+            setTimeout(() => el.classList.remove('hot'), 600);
+        }
+
+        // ===== Rendering =====
+        function setTab(name, btn) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.getElementById(`panel-${name}`).classList.add('active');
+        }
+
+        function renderBadge() {
+            const b = document.getElementById('runBadge');
+            if (S.finished) { b.className = 'run-badge done'; b.textContent = '重播完成'; }
+            else if (S.running) { b.className = 'run-badge running'; b.textContent = `重播中 · ${S.sc.title}`; }
+            else { b.className = 'run-badge paused'; b.textContent = '已暫停'; }
+        }
+
+        function renderEnv() {
+            const tele = readTelemetry();
+            const grid = document.getElementById('envGrid');
+            grid.innerHTML = Object.keys(ENV_META).map(k => {
+                const m = ENV_META[k];
+                const v = tele[k];
+                const offline = v === null;
+                const pct = offline ? 0 : Math.max(0, Math.min(100, (v - m.min) / (m.max - m.min) * 100));
+                return `
+                    <div class="env-card ${offline ? 'offline' : ''}">
+                        <div class="env-label">${m.label}${offline ? ' · 離線' : ''}</div>
+                        <div class="env-value">${offline ? '--' : m.fmt(v)}<span class="env-unit">${m.unit}</span></div>
+                        <div class="env-bar"><div class="env-bar-fill" style="width:${pct}%;background:${m.color}"></div></div>
+                    </div>`;
+            }).join('');
+        }
+
+        function renderDevices() {
+            const grid = document.getElementById('deviceGrid');
+            const pumpFault = hasEvent('pump_failure');
+            grid.innerHTML = Object.keys(DEVICE_SPEC).map(k => {
+                const d = DEVICE_SPEC[k];
+                const on = S.devices[k] === 'ON';
+                const fault = k === 'pump' && pumpFault;
+                const runMin = k === 'fan' ? S.esg.fanMin : S.esg.pumpMin;
+                const extra = k === 'pump' ? ` · 水流 ${S.waterFlow} L/min` : '';
+                return `
+                    <div class="device-card ${fault ? 'fault' : on ? 'on' : ''}">
+                        <span class="device-icon">${d.icon}</span>
+                        <div class="device-info">
+                            <div class="device-name">${d.name}</div>
+                            <div class="device-meta">累計運轉 ${Math.round(runMin)} 分${extra}</div>
+                        </div>
+                        <span class="device-state ${fault ? 'fault' : on ? 'on' : 'off'}">${fault ? 'FAULT' : S.devices[k]}</span>
+                    </div>`;
+            }).join('');
+        }
+
+        function renderTimeline() {
+            const list = document.getElementById('timelineList');
+            document.getElementById('eventCount').textContent = S.events.length;
+            if (S.events.length === 0) {
+                list.innerHTML = '<div class="tl-empty">尚無事件 — 播放 Scenario 後，Event Engine 會由 Telemetry 解析出農場事件。</div>';
+                return;
+            }
+            list.innerHTML = [...S.events].reverse().map(e => {
+                const dur = e.tEnd !== null ? `${Math.round(e.tEnd - e.tStart)} 分鐘` : '進行中';
+                const range = e.tEnd !== null ? `${fmtTime(e.tStart)} – ${fmtTime(e.tEnd)}` : `${fmtTime(e.tStart)} –`;
+                const cls = e.status === 'active' ? 'active' : e.sev;
+                const badge = e.sev === 'danger'
+                    ? '<span class="tl-badge danger">ALERT</span>'
+                    : e.status === 'active'
+                        ? '<span class="tl-badge active">進行中</span>'
+                        : '<span class="tl-badge done">已完成</span>';
+                const metaBits = [];
+                if (e.meta.water !== undefined) metaBits.push(`用水 ${e.meta.water.toLocaleString()} L`);
+                if (e.meta.note) metaBits.push(e.meta.note);
+                if (e.meta.device) metaBits.push(`設備：${e.meta.device}`);
+                return `
+                    <div class="tl-item ${cls}">
+                        <div class="tl-head">
+                            <span class="tl-title">${e.icon} ${e.title}</span>
+                            ${badge}
+                        </div>
+                        <div class="tl-time">${range}（${dur}）</div>
+                        <div class="tl-reason">原因：${e.reason}</div>
+                        ${metaBits.length ? `<div class="tl-meta">${metaBits.join(' · ')}</div>` : ''}
+                    </div>`;
+            }).join('');
+        }
+
+        function renderValidation() {
+            const list = document.getElementById('validateList');
+            const summary = document.getElementById('validateSummary');
+            const rows = S.sc.expected.map(type => {
+                const occurred = hasEvent(type);
+                const state = occurred ? 'pass' : (S.finished ? 'fail' : 'wait');
+                const label = { pass: 'PASS', fail: 'FAIL', wait: '等待' }[state];
+                return { type, state, html: `
+                    <div class="validate-item">
+                        <span>${EVENT_TYPES[type].icon} ${EVENT_TYPES[type].title}</span>
+                        <span class="v-badge ${state}">${label}</span>
+                    </div>` };
+            });
+            list.innerHTML = rows.map(r => r.html).join('');
+            if (S.finished) {
+                const allPass = rows.every(r => r.state === 'pass');
+                summary.className = `validate-summary ${allPass ? 'pass' : 'fail'}`;
+                summary.textContent = allPass ? '✅ Scenario PASS' : '❌ Scenario FAIL';
+            } else {
+                summary.className = 'validate-summary';
+                summary.textContent = '重播結束後判定';
+            }
+        }
+
+        function renderMqtt() {
+            const el = document.getElementById('mqttLog');
+            el.innerHTML = [...S.mqtt].reverse().map(m => {
+                const cls = m.kind === 'dev' ? 'dev' : m.kind === 'evt' ? 'evt' : '';
+                return `<div class="mqtt-line">[${m.t}] <span class="mqtt-topic ${cls}">${m.topic}</span> ${m.payload}</div>`;
+            }).join('');
+        }
+
+        function renderTrace() {
+            const c = S.sc.crop;
+            document.getElementById('batchIcon').textContent = c.icon;
+            document.getElementById('batchLot').textContent = c.lot;
+            document.getElementById('batchGrid').innerHTML = `
+                <div class="batch-field"><div class="bf-label">作物</div><div class="bf-value">${c.name}</div></div>
+                <div class="batch-field"><div class="bf-label">場域</div><div class="bf-value">${c.zone}</div></div>
+                <div class="batch-field"><div class="bf-label">定植日</div><div class="bf-value">${c.planted}</div></div>
+                <div class="batch-field"><div class="bf-label">紀錄日</div><div class="bf-value">2026-07-13</div></div>
+                <div class="batch-field"><div class="bf-label">碳足跡</div><div class="bf-value">${esgCarbon().toFixed(3)} kgCO₂e</div></div>
+                <div class="batch-field"><div class="bf-label">灌溉用水</div><div class="bf-value">${Math.round(S.esg.waterL).toLocaleString()} L</div></div>`;
+
+            const body = document.getElementById('traceBody');
+            const rows = S.events.filter(e => EVENT_TYPES[e.type].trace);
+            if (rows.length === 0) {
+                body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);">尚無紀錄 — 事件發生後自動寫入履歷</td></tr>';
+                return;
+            }
+            body.innerHTML = rows.map(e => {
+                let detail = e.reason;
+                if (e.type === 'irrigation' && e.meta.water !== undefined)
+                    detail = `灌溉 ${Math.round((e.tEnd ?? S.simMin) - e.tStart)} 分鐘，用水 ${e.meta.water.toLocaleString()} L`;
+                if (e.type === 'ventilation' && e.tEnd !== null)
+                    detail = `通風 ${Math.round(e.tEnd - e.tStart)} 分鐘（${e.reason}）`;
+                const range = e.tEnd !== null ? `${fmtTime(e.tStart)}–${fmtTime(e.tEnd)}` : `${fmtTime(e.tStart)}–`;
+                return `<tr><td>${range}</td><td>${e.icon} ${e.title}</td><td>${detail}</td><td>Event Engine</td></tr>`;
+            }).join('');
+        }
+
+        function esgCarbon() {
+            const kwh = (S.esg.fanMin / 60) * DEVICE_SPEC.fan.kw + (S.esg.pumpMin / 60) * DEVICE_SPEC.pump.kw;
+            return kwh * GRID_FACTOR;
+        }
+
+        function renderESG() {
+            const fanKwh = (S.esg.fanMin / 60) * DEVICE_SPEC.fan.kw;
+            const pumpKwh = (S.esg.pumpMin / 60) * DEVICE_SPEC.pump.kw;
+            const totalKwh = fanKwh + pumpKwh;
+            document.getElementById('esgEnergy').innerHTML = `${totalKwh.toFixed(2)}<span class="esg-unit">kWh</span>`;
+            document.getElementById('esgCarbon').innerHTML = `${(totalKwh * GRID_FACTOR).toFixed(3)}<span class="esg-unit">kgCO₂e</span>`;
+            document.getElementById('esgWater').innerHTML = `${Math.round(S.esg.waterL).toLocaleString()}<span class="esg-unit">L</span>`;
+            document.getElementById('esgEvents').innerHTML = `${S.events.length}<span class="esg-unit">筆</span>`;
+            document.getElementById('esgBody').innerHTML = `
+                <tr><td>🌀 排風扇 fan01</td><td>${Math.round(S.esg.fanMin)} 分鐘</td><td>${DEVICE_SPEC.fan.kw} kW</td><td>${fanKwh.toFixed(2)} kWh</td><td>${(fanKwh * GRID_FACTOR).toFixed(3)} kg</td></tr>
+                <tr><td>💧 泵浦 pump01</td><td>${Math.round(S.esg.pumpMin)} 分鐘</td><td>${DEVICE_SPEC.pump.kw} kW</td><td>${pumpKwh.toFixed(2)} kWh</td><td>${(pumpKwh * GRID_FACTOR).toFixed(3)} kg</td></tr>`;
+        }
+
+        function renderQR() {
+            const box = document.getElementById('qrBox');
+            box.innerHTML = '';
+            const url = `https://trace.athenafarm.example/${FARM_ID}/${S.sc.crop.lot}`;
+            try {
+                new QRCode(box, { text: url, width: 132, height: 132, correctLevel: QRCode.CorrectLevel.M });
+            } catch (e) {
+                box.innerHTML = `<div style="color:#333;font-size:0.7em;padding:20px;max-width:140px;word-break:break-all;">${url}</div>`;
+            }
+        }
+
+        function renderYaml() {
+            const sc = S.sc;
+            const kfLines = Object.entries(sc.keyframes).map(([m, frames]) =>
+                `    ${m}:\n` + frames.map(([t, v]) => `      - { time: "${fmtTime(t)}", value: ${v} }`).join('\n')
+            ).join('\n');
+            const faultLines = Object.keys(sc.faults).length
+                ? Object.entries(sc.faults).map(([k, v]) =>
+                    `  ${k}: ${Array.isArray(v) ? `[${fmtTime(v[0])}, ${fmtTime(v[1])}]` : v}`).join('\n')
+                : '  # none';
+            const yaml =
+`name: ${S.key}
+title: ${sc.title}
+description: ${sc.desc}
+time:
+  start: "${fmtTime(sc.start)}"
+  end: "${fmtTime(sc.end)}"
+environment:
+  keyframes:
+${kfLines}
+  soil:
+    initial: ${sc.soilStart}
+    evaporation_rate: ${sc.evapRate}   # % per minute
+faults:
+${faultLines}
+expected_events:
+${sc.expected.map(e => `  - ${e}`).join('\n')}`;
+            document.getElementById('yamlBlock').textContent = yaml;
+        }
+
+        // ===== Chart =====
+        let envChart = null;
+
+        function initChart() {
+            const ctx = document.getElementById('envChart').getContext('2d');
+            if (envChart) envChart.destroy();
+            try {
+                envChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [
+                            { label: 'CO₂ (ppm)', data: [], borderColor: '#fbbf24', backgroundColor: 'rgba(251,191,36,0.1)', yAxisID: 'y', borderWidth: 1.5, pointRadius: 0, tension: 0.3 },
+                            { label: '溫度 (°C)', data: [], borderColor: '#60a5fa', yAxisID: 'y2', borderWidth: 1.5, pointRadius: 0, tension: 0.3 },
+                            { label: '土壤濕度 (%)', data: [], borderColor: '#34d399', yAxisID: 'y2', borderWidth: 1.5, pointRadius: 0, tension: 0.3 }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: false,
+                        interaction: { intersect: false, mode: 'index' },
+                        plugins: {
+                            legend: { labels: { color: '#8b95a5', font: { size: 11 }, boxWidth: 12 } },
+                            tooltip: {
+                                backgroundColor: '#1e2533', titleColor: '#e8eaed', bodyColor: '#8b95a5',
+                                borderColor: '#2a3345', borderWidth: 1
+                            }
+                        },
+                        scales: {
+                            x: { grid: { color: '#2a3345' }, ticks: { color: '#5a6577', font: { size: 10 }, maxTicksLimit: 10 } },
+                            y:  { position: 'left',  min: 400, max: 2000, grid: { color: '#2a3345' }, ticks: { color: '#fbbf24', font: { size: 10 } } },
+                            y2: { position: 'right', min: 0,   max: 80,   grid: { display: false }, ticks: { color: '#5a6577', font: { size: 10 } } }
+                        }
+                    }
+                });
+            } catch (e) { console.warn('Chart init failed:', e); }
+        }
+
+        function renderChart() {
+            if (!envChart) return;
+            envChart.data.labels = S.chart.t.map(fmtTime);
+            envChart.data.datasets[0].data = S.chart.co2;
+            envChart.data.datasets[1].data = S.chart.temp;
+            envChart.data.datasets[2].data = S.chart.soil;
+            envChart.update('none');
+        }
+
+        let renderCount = 0;
+        function renderAll() {
+            document.getElementById('simClock').textContent = fmtTime(S.simMin);
+            const prog = (S.simMin - S.sc.start) / (S.sc.end - S.sc.start) * 100;
+            document.getElementById('progressFill').style.width = `${prog}%`;
+            renderBadge();
+            renderEnv();
+            renderDevices();
+            renderTimeline();
+            renderValidation();
+            renderMqtt();
+            renderCount++;
+            if (renderCount % 3 === 0 || S.finished || !S.running) {
+                renderChart();
+                renderTrace();
+                renderESG();
+            }
         }
 
         // ===== Init =====
-        function init() {
-            ghData = zoneConfig.map(generateZoneData);
-            renderZones();
-            renderAlerts();
-            updateStats();
-            updateClock();
-            buildZoneButtons();
-
-            try {
-                initChart();
-            } catch (e) {
-                console.warn('Chart.js init failed:', e);
-            }
-
-            for (let i = 0; i < 60; i++) {
-                ghData.forEach(d => {
-                    d.currentTemp += (Math.random() - 0.5) * 0.8;
-                    d.currentTemp = clamp(d.currentTemp, d.temp[0] - 2, d.temp[1] + 2);
-                    d.currentHumidity += (Math.random() - 0.5) * 2;
-                    d.currentHumidity = clamp(d.currentHumidity, d.humidity[0] - 5, d.humidity[1] + 5);
-                    d.co2 += (Math.random() - 0.5) * 40;
-                    d.co2 = clamp(d.co2, 300, 1000);
-                    d.light += (Math.random() - 0.5) * 1500;
-                    d.light = clamp(d.light, 5000, 30000);
-                });
-                recordHistory();
-            }
-
-            renderZones();
-            try { updateChart(); } catch (e) {}
-            startSimulation();
+        function buildScenarioButtons() {
+            const group = document.getElementById('scenarioGroup');
+            group.innerHTML = Object.entries(SCENARIOS).map(([key, sc]) =>
+                `<button class="bar-btn" data-key="${key}" onclick="loadScenario('${key}')" title="${sc.desc}">${sc.title}</button>`
+            ).join('');
         }
 
-        init();
+        buildScenarioButtons();
+        loadScenario('morning_co2');
+        timer = setInterval(tick, 200);
     </script>
 </body>
 </html>

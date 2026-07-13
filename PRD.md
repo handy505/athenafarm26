@@ -1,158 +1,209 @@
-# PRD: AthenaFarm26 智慧溫室監控系統
+# PRD: AthenaFarm — Digital Farm Event Engine
 
-## 1. 產品概述
+> 本文件依《AthenaFarm Simulator PRD v0.1》調整專案方向：從「單純收 Sensor Data 的監控 Dashboard」轉型為 **Event Engine 驅動的 Digital Farm**，最終目標是作為**產銷履歷（Traceability）與 ESG 平台**的基礎。
 
-### 1.1 產品定位
-AthenaFarm26 是面向中小型溫室案場的即時監控 Dashboard，透過 AI 快速客製化交付，協助人力不足的農場主遠端掌握溫室狀態，降低管理成本。
+## 1. 產品願景
 
-### 1.2 目標客戶
-- **主要客群**：5-50 人的中小型溫室農場
-- **作物類型**：葉菜、果菜、育苗等溫室種植
-- **痛點**：人力不足，需要自動化監控減少人工巡場
+建立一個可模擬真實農業環境的 Digital Farm，使開發者可以在沒有實際農場的情況下：
 
-### 1.3 核心價值主張
-> 「溫室最怕半夜出狀況沒人發現。我們幫你建一個手機就能看的監控系統，溫度、濕度異常自動通知你，不用一直派人巡場。」
+- 驗證 Farm Event Model
+- 測試 Rule Engine
+- 開發 AI 農業決策
+- 驗證產銷履歷資料流程
+- 驗證 ESG Carbon Calculation
 
-## 2. 商業策略
+**核心理念：不模擬 Sensor，而是模擬農場行為。**
 
-### 2.1 銷售模式
-- **月租制**：每月收取服務費，包含系統維護、數據儲存、異常通知
-- **前 3 個月優惠**：降低客戶嘗試門檻
+## 2. 問題陳述
 
-### 2.2 交付時程
-| 階段 | 時間 | 交付物 | 目的 |
-|------|------|--------|------|
-| 初次接觸 | 第 0 天 | 線上 demo 連結 | 展示介面 |
-| 需求訪談 | 第 1-2 天 | 問卷/訪談記錄 | 了解案場規模 |
-| 客製化 Demo | 第 3 天 | 針對客戶作物的 HTML 頁面 | 「這就是你的溫室」 |
-| POC 驗證 | 第 7 天 | 可互動的模擬系統 | 讓客戶體驗 |
-| 正式報價 | 第 8-10 天 | 方案書 + 合約 | 明確服務內容 |
-| 上線 | 第 14 天 | 接上感測器或模擬數據 | 開始運作 |
-| 穩定期 | 第 30 天 | 完整功能 | 進入日常維護 |
+### 2.1 缺乏測試環境
 
-### 2.3 競爭優勢
-- **快速交付**：3 天 demo、1 週 POC、2 週上線，比傳統開發（3-6 個月）快數倍
-- **低溝通成本**：中小型案場決策快，適合快速迭代
-- **AI 輔助客製化**：利用 AI 降低開發成本，快速適配不同案場需求
+真實農場取得困難、變化慢、不容易重現問題。想測試高溫、高濕、CO₂ 累積、灌溉失敗等情境，只能等待自然環境發生。
 
-## 3. 功能規格
+### 2.2 Sensor Data 不等於農業知識
 
-### 3.1 Phase 1：Demo Dashboard（目前階段）
+傳統 IoT 架構（Sensor → Database → Dashboard）只能看到 `Temperature = 32°C`、`CO2 = 1500ppm`，但無法回答：
 
-#### 區域監控
-- 支援多個作物區域（葉菜區、果菜區、育苗區）
-- 每個區域獨立設定理想溫濕度範圍
-- 即時顯示：溫度 (°C)、濕度 (%)、CO₂ (ppm)、光照 (k lux)
-- 每個指標附帶 Sparkline 迷你趨勢圖（30 分鐘）
+- 發生了什麼**農業事件**？
+- 為什麼需要處理？
+- 處理結果如何？
 
-#### 歷史趨勢圖表
-- Chart.js 時序圖表
-- 時間範圍：30 分鐘 / 1 小時 / 6 小時 / 24 小時
-- 指標篩選：溫度 / 濕度 / CO₂ / 光照
-- 區域篩選：全部 / 各別區域
-- 數據保留：最近 24 小時
+產銷履歷與 ESG 需要的是「事件與行為紀錄」，不是原始數據點。
 
-#### 設備控制
-- 通風系統：自然通風 / 強制通風 / 關閉
-- 霧化系統：0-100% 強度調節
-- 遮陽系統：0-100% 開度調節
+## 3. 產品目標
 
-#### 異常告警
-- 溫度超出理想範圍 ±2°C 觸發告警
-- 三級告警：正常 (綠) / 注意 (黃) / 異常 (紅)
-- 側欄即時異常紀錄
-- 異常計數顯示
+建立完整資料管線：
 
-#### 側欄功能
-- 全場平均值統計（溫度、濕度、CO₂、光照）
-- 緊急停止按鈕
-- 數據匯出（Console Log）
-
-### 3.2 Phase 2：IoT 整合（規劃中）
-- 接入實際感測器數據（ESP32 / Raspberry Pi）
-- WebSocket 即時數據推送
-- 歷史數據持久化儲存
-- CSV 數據匯出 UI
-
-### 3.3 Phase 3：多案場管理（規劃中）
-- 多案場切換介面
-- 案場配置模板化（作物、範圍、設備）
-- 用戶帳號系統
-- 行動裝置 PWA
-
-## 4. 技術架構
-
-### 4.1 技術棧
-| 層級 | 技術 |
-|------|------|
-| 前端 | HTML5 + CSS3 + JavaScript（單檔） |
-| 圖表 | Chart.js 4 + chartjs-adapter-date-fns |
-| 字體 | Inter（現代 Dashboard 風格） |
-| 部署 | GitLab Pages（免費靜態託管） |
-
-### 4.2 設計原則
-- **高資訊密度**：參考 AROYA、iPlant 等農業 Dashboard 設計
-- **深色主題**：減少長時間觀看的視覺疲勞
-- **響應式**：支援桌面與行動裝置
-- **單檔部署**：無需後端，一個 HTML 檔案即可運作
-
-### 4.3 數據模型
-```javascript
-// 區域設定
-zoneConfig = [
-  { name, nameEn, icon, temp: [min, max], humidity: [min, max] }
-]
-
-// 即時數據
-ghData = [
-  { ...zoneConfig, currentTemp, currentHumidity, co2, light, prevTemp, prevHumidity }
-]
-
-// 歷史數據
-historyData = [
-  { time: timestamp, zones: [{ temp, humidity, co2, light }] }
-]
+```
+Scenario → Environment Model → Telemetry → Device Action → Farm Event → Farm Timeline
+                                                                              ↓
+                                                            Dashboard / QR / AI / ESG
 ```
 
-## 5. 非功能需求
+## 4. 系統架構
 
-### 5.1 效能
-- 模擬資料更新頻率：1.5 秒
-- 圖表更新頻率：6 秒（每 4 個 tick）
-- 歷史資料保留：24 小時
+```
+              Scenario
+                 |
+          Farm Simulator
+                 |
+          MQTT Broker
+                 |
+       AthenaFarm Platform
+                 |
+        +----------------+
+        |  Event Engine  |
+        +----------------+
+                 |
+          Farm Timeline
+                 |
+     Dashboard / QR / AI / ESG
+```
 
-### 5.2 相容性
-- 瀏覽器：Chrome 90+、Firefox 90+、Safari 15+、Edge 90+
-- 裝置：桌面、平板、手機
+> **POC 註記**：目前版本以單一 HTML 靜態頁在瀏覽器內實作整條管線（in-page message bus 模擬 MQTT topic 契約），可直接部署 GitHub Pages Demo；MQTT Broker 與後端平台為下一階段整合目標，Topic 與 Payload 契約見 §8。
 
-### 5.3 部署
-- 靜態託管，無需伺服器
-- GitLab Pages 免費方案即可
+## 5. 核心 Domain Model
 
-## 6. 成功指標
+| 概念 | 說明 | 範例 |
+|------|------|------|
+| **Scenario** | 描述「今天農場發生什麼」 | Hot Day、Pump Failure |
+| **Environment Model** | 模擬環境隨時間變化 | 06:00 24°C → 12:00 36°C |
+| **Telemetry** | 模擬 Sensor Output | `{"time":"08:00","temp":30,"humi":75,"co2":1200}` |
+| **Device State** | 模擬設備狀態 | `{"fan":"ON","pump":"OFF"}` |
+| **Farm Event** | 系統主要產物 | Ventilation Started / Reason: CO2 High / 08:10–08:25 |
+| **Farm Timeline** | 事件時間軸，履歷與 ESG 的資料來源 | 完整 Farm Story |
 
-### 6.1 產品指標
-- Demo 頁面載入時間 < 3 秒
-- 即時數據延遲 < 2 秒
-- 圖表渲染流畅度 > 30fps
+## 6. Scenario 設計
 
-### 6.2 商業指標
-- 3 天內完成客製化 Demo
-- 1 週內完成 POC
-- 2 週內上線
-- 1 個月內穩定運作
+Scenario 使用 YAML 描述（POC 於 UI「Scenario YAML」分頁呈現對應定義）：
 
-## 7. 風險與限制
+```yaml
+name: morning_co2
+time:
+  start: "06:00"
+  end: "12:00"
+environment:
+  keyframes:
+    co2:
+      - { time: "06:00", value: 820 }
+      - { time: "08:30", value: 1680 }
+faults:
+  # none
+expected_events:
+  - ventilation
+```
 
-| 風險 | 影響 | 緩解措施 |
-|------|------|----------|
-| Chart.js CDN 載入失敗 | 圖表無法顯示 | 已加入 try/catch 降級處理 |
-| 無後端數據持久化 | 重新整理後歷史數據消失 | Phase 2 加入後端儲存 |
-| 模擬數據不夠真實 | 客戶無法感受實際效果 | 盡快接入實際感測器 |
-| 純前端無法推送通知 | 異常時無法主動通知 | Phase 2 加入 Push Notification |
+### 內建 Scenario（POC）
 
-## 8. 版本歷史
+| # | Scenario | 流程 | Expected Events |
+|---|----------|------|-----------------|
+| 1 | 早晨 CO₂ 累積 | Morning → CO₂ Rising → Fan ON → CO₂ Recovery → Fan OFF | ventilation |
+| 2 | 乾旱灌溉 | Soil Moisture Low → Pump ON → Water Flow → Moisture Recovery | irrigation |
+| 3 | 泵浦故障 | Pump ON → No Water Flow → Generate Alarm | irrigation, pump_failure |
+| 4 | 感測器離線 | Sensor Data Missing → Detect Abnormality → Generate Device Event | sensor_offline |
+
+## 7. Event Engine 規則（POC）
+
+| 規則 | 觸發條件 | 動作 | 結束條件 |
+|------|----------|------|----------|
+| Ventilation | CO₂ > 1500 ppm | Fan ON + 開立通風事件 | CO₂ < 950 ppm → Fan OFF、事件完成 |
+| Irrigation | 土壤濕度 < 30% | Pump ON + 開立灌溉事件 | 土壤濕度 > 45% → Pump OFF、記錄用水量 |
+| Pump Failure | Pump ON ≥ 6 分鐘且無水流 | 產生 Alarm、停用泵浦 | —（需人工處理） |
+| Sensor Failure | 連續 5 分鐘無 Telemetry | 產生 Sensor Offline 設備事件 | 資料恢復 → 事件完成 |
+| High Temp | 氣溫 > 34°C | 高溫警報 | 氣溫 < 32°C（遲滯） |
+| Soil Critical | 土壤濕度 < 22% | 低土壤濕度告警 | — |
+
+## 8. MQTT Interface（整合契約）
+
+Simulator 作為 MQTT Publisher：
+
+| Topic | 用途 | Payload 範例 |
+|-------|------|--------------|
+| `athena/farm01/telemetry` | 感測數據 | `{"device":"air01","temp":32,"humi":80,"co2":1600}` |
+| `athena/farm01/device` | 設備狀態變更 | `{"fan":"ON"}` |
+| `athena/farm01/event` | Farm Event | `{"event":"ventilation","status":"started","reason":"..."}` |
+
+## 9. Event Validation
+
+每個 Scenario 定義 `expected_events`，重播結束後比對 **Actual Event vs Expected Event**，給出 PASS / FAIL。
+
+用途：**Event Regression Test** — 新增或修改規則後重播全部 Scenario，確保事件產出不回歸。未來整合 GitHub Actions：Scenario Test → Run Simulator → Generate Event → Compare Result → PASS/FAIL。
+
+## 10. 產銷履歷（Traceability）
+
+Farm Event 自動轉為履歷紀錄：
+
+- **批次資訊**：批號、作物、場域、定植日
+- **Farm Story**：灌溉（時長、用水量）、通風、異常處置，每筆紀錄附事件起訖與原因，來源標記 `Event Engine`（可稽核）
+- **消費者溯源 QR**：掃碼查看批次完整農場故事
+
+價值：履歷不再靠人工填寫，而是由事件引擎自動生成、有據可查。
+
+## 11. ESG 碳盤查
+
+由設備事件推算，而非人工估計：
+
+- **用電**：設備運轉時間（來自事件起訖）× 額定功率
+- **碳排**：用電 × 電力排碳係數（POC 採 0.494 kgCO₂e/kWh 示意）
+- **用水**：灌溉事件時長 × 泵浦流量
+- **可稽核性**：每筆排放對應具體 Farm Event
+
+## 12. Dashboard（POC 頁面）
+
+| 分頁 | 內容 |
+|------|------|
+| 即時監控 | 環境（溫度/濕度/CO₂/光照/土壤濕度）、設備狀態（Fan/Pump + 運轉時間）、環境趨勢圖、MQTT 訊息流 |
+| 事件時間軸 | Farm Event Timeline（事件、原因、起訖、時長）+ Event Validation（PASS/FAIL） |
+| 產銷履歷 | 批次卡、Farm Story 履歷表、溯源 QR |
+| ESG 碳盤查 | 用電/碳排/用水/佐證事件數、設備排放明細 |
+| Scenario YAML | 當前 Scenario 的 YAML 定義 |
+
+操作：Scenario 切換、播放/暫停/重播、速度調整（1×/2×/6×）。
+
+## 13. Non-Goals（POC 不包含）
+
+- 真正作物生長模型
+- AI 訓練模型
+- 複雜氣象模型
+- 商業農場管理功能
+- 真實 MQTT Broker 與後端持久化（下一階段）
+
+## 14. Roadmap
+
+| Phase | 內容 | 狀態 |
+|-------|------|------|
+| 1. Basic Simulator | YAML Scenario、Telemetry 生成、Environment Model、Event Engine、Timeline | ✅ 本版（in-browser） |
+| 2. Device Interaction | 真實 MQTT Broker、Fan/Pump relay feedback、後端 Event Store | 規劃中 |
+| 3. Crop Model | 作物生長、病害風險、氣象 | 規劃中 |
+| 4. Digital Twin | Farm state、Historical replay、Prediction | 規劃中 |
+| 5. Traceability / ESG 平台 | 履歷簽章與上鏈、ESG 報告匯出、多農場多批次 | 目標 |
+
+## 15. 成功條件
+
+**Technical**
+- ✅ Scenario 可重播
+- ✅ Telemetry 可生成
+- ✅ Event Engine 可解析
+- ✅ Timeline 可建立
+
+**Product**
+- ✅ 不需要真實農場即可 Demo
+- ✅ 可展示完整 Farm Story
+- ✅ 可支援 Traceability / ESG 後續開發
+
+## 16. 產品原則
+
+AthenaFarm 的核心不是產生假資料，而是：**建立一個可驗證智慧農業 Domain Model 的 Digital Farm。**
+
+```
+Scenario → Farm Behavior → Telemetry → Farm Event → Knowledge
+```
+
+讓智慧農業系統可以在進入真實農場之前，先在數位農場中被設計、測試與演進。
+
+## 17. 版本歷史
 
 | 版本 | 日期 | 變更 |
 |------|------|------|
-| v1.0 | 2026-07 | 初始版本，溫室監控 Dashboard + 歷史趨勢 |
+| v1.0 | 2026-07 | 溫室監控 Dashboard + 歷史趨勢 |
+| v2.0 | 2026-07 | 轉型 Event Engine：Scenario 重播、Farm Event Timeline、Event Validation、產銷履歷、ESG 碳盤查 |

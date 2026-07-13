@@ -1,36 +1,54 @@
-# AthenaFarm26 - 智慧溫室監控系統
+# AthenaFarm — Digital Farm Event Engine
 
-![Platform](https://img.shields.io/badge/platform-GitLab%20Pages-blue)
+![Platform](https://img.shields.io/badge/platform-GitHub%20Pages-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-中小型溫室案場的即時監控 Dashboard，解決人力不足的痛點，讓農場主用手機或電腦就能遠端掌握溫室狀態。
+可模擬真實農業環境的 Digital Farm（POC）。核心理念：**不模擬 Sensor，而是模擬農場行為** — 由 Scenario 重播產生 Telemetry，經 Event Engine 解析為 Farm Event，建立 Farm Timeline，最終支撐**產銷履歷（Traceability）與 ESG 碳盤查**。
 
-## 核心功能
+```
+Scenario → Environment Model → Telemetry → Device Action → Farm Event → Farm Timeline
+                                                                            ↓
+                                                          Dashboard / QR / AI / ESG
+```
 
-### 區域監控
-- 針對不同作物區域（葉菜、果菜、育苗）設定獨立的理想溫濕度範圍
-- 即時顯示溫度、濕度、CO₂、光照四項指標
-- 每個指標附帶迷你趨勢圖（Sparkline），一眼掌握 30 分鐘變化
+## 為什麼不是又一個 Sensor Dashboard？
 
-### 歷史趨勢
-- Chart.js 時序圖表，支援 30 分鐘 / 1 小時 / 6 小時 / 24 小時切換
-- 可依指標（溫度、濕度、CO₂、光照）和區域篩選
-- 自動保留最近 24 小時的歷史數據
+傳統 IoT 只能看到 `Temperature = 32°C`、`CO2 = 1500ppm`，無法回答：發生了什麼農業事件？為什麼需要處理？處理結果如何？
 
-### 設備控制
-- 通風系統：自然通風 / 強制通風 / 關閉
-- 霧化系統：0-100% 強度調節
-- 遮陽系統：0-100% 開度調節
+AthenaFarm 的主要產物是 **Farm Event**（含事件、原因、起訖時間），因此：
 
-### 異常告警
-- 溫度超出理想範圍時自動產生告警
-- 三級告警：正常（綠）、注意（黃）、異常（紅）
-- 側欄即時顯示異常紀錄
+- **產銷履歷**由事件自動生成，不靠人工填寫，可稽核
+- **ESG 碳排**由設備事件起訖推算（運轉時間 × 功率 × 排碳係數），每筆排放有事件佐證
+
+## 功能
+
+### Scenario 重播
+- 4 個內建 Scenario：早晨 CO₂ 累積、乾旱灌溉、泵浦故障、感測器離線
+- 播放 / 暫停 / 重播、速度調整（1× / 2× / 6×）
+- Scenario 以 YAML 定義（UI 內附「Scenario YAML」分頁）
+
+### Event Engine
+- 規則式引擎：CO₂ > 1500 → 通風、土壤濕度 < 30% → 灌溉、泵浦無水流 → 告警、Telemetry 中斷 → 感測器離線事件
+- 設備動作回饋環境（Fan 降 CO₂、Pump 補土壤濕度）
+- **Event Validation**：Expected vs Actual Event，重播結束給出 PASS / FAIL（可作 Event Regression Test）
+
+### Farm Timeline
+- 事件時間軸：事件、原因、起訖、時長、狀態
+- MQTT 訊息流檢視（`athena/farm01/telemetry` / `device` / `event` 契約）
+
+### 產銷履歷
+- 批次卡（批號、作物、場域、定植日、碳足跡、用水）
+- Farm Story 履歷表：由事件自動寫入
+- 消費者溯源 QR
+
+### ESG 碳盤查
+- 用電、碳排（範疇二）、灌溉用水、佐證事件數
+- 設備排放明細表
 
 ## 線上展示
 
 ```
-https://YOUR_USERNAME.gitlab.io/athenafarm26/
+https://handy505.github.io/athenafarm26/
 ```
 
 ## 本地運行
@@ -41,44 +59,35 @@ python3 -m http.server 8080
 # 訪問 http://localhost:8080
 ```
 
-## 部署到 GitLab Pages
-
-```bash
-# 1. 在 GitLab 建立 public 專案
-#    https://gitlab.com/projects/new
-
-# 2. 新增 remote
-git remote add origin https://gitlab.com/YOUR_USERNAME/athenafarm26.git
-
-# 3. 執行部署腳本
-./deploy.sh
-```
-
 ## 技術棧
 
-- HTML5 + CSS3 + JavaScript（純前端，無需後端）
-- [Chart.js](https://www.chartjs.org/) + chartjs-adapter-date-fns（時序圖表）
-- Inter 字體（現代 Dashboard 風格）
-- 響應式設計，支援桌面與行動裝置
+- HTML5 + CSS3 + JavaScript（單檔靜態頁，無需後端）
+- [Chart.js](https://www.chartjs.org/)（環境趨勢圖）
+- qrcodejs（溯源 QR）
+- 深色 Dashboard 風格、響應式設計
 
 ## 專案結構
 
 ```
 athenafarm26/
-├── index.html          # 主頁面（單檔完整應用）
-├── deploy.sh           # GitLab Pages 部署腳本
-├── .gitlab-ci.yml      # CI/CD 配置
-├── PRD.md              # 產品需求文件
-└── README.md           # 本文件
+├── index.html                          # 單檔完整應用（Simulator + Event Engine + UI）
+├── PRD.md                              # 產品需求文件（Event Engine 方向）
+├── AthenaFarm Simulator PRD v0.1.pdf   # 原始 Simulator PRD
+├── .gitlab-ci.yml                      # CI/CD 配置（GitLab Pages 遺留）
+├── deploy.sh                           # 部署腳本
+└── README.md                           # 本文件
 ```
 
-## 未來規劃
+## Roadmap
 
-- 接入實際 IoT 感測器數據
-- 歷史數據 CSV 匯出
-- 多案場管理介面
-- 行動裝置 App 或 PWA
+| Phase | 內容 |
+|-------|------|
+| 1. Basic Simulator ✅ | Scenario 重播、Telemetry、Event Engine、Timeline（本版，in-browser） |
+| 2. Device Interaction | 真實 MQTT Broker、relay feedback、後端 Event Store |
+| 3. Crop Model | 作物生長、病害風險、氣象 |
+| 4. Digital Twin | Farm state、Historical replay、Prediction |
+| 5. Traceability / ESG 平台 | 履歷簽章、ESG 報告匯出、多農場多批次 |
 
 ---
 
-MIT License © 2026 AthenaFarm26
+MIT License © 2026 AthenaFarm
