@@ -21,6 +21,7 @@ well enough that both a human and an AI agent can ask "why does this exist"
 and get a real answer.
 
 Full rationale and long-form exploration: [system-evolution.md](../experiments/system-evolution.md).
+Decision record for this shift itself: [R-003](../requirements/R-003-methodology-becomes-primary-axis.md) / [ADR-003](../adr/ADR-003-adopt-system-evolution-methodology.md).
 
 ## What this changes in practice
 
