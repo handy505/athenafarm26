@@ -25,11 +25,11 @@ Full rationale and long-form exploration: [system-evolution.md](../experiments/s
 ## What this changes in practice
 
 - New requirements/ADRs are written to explain decisions that already
-  happened in this repo (see `docs/requirements/`, `docs/adr/`), not to
+  happened in this repo (see `doc/requirements/`, `doc/adr/`), not to
   plan hypothetical future features.
 - Structure (System DSL, simulator, multi-agent workflow, traceability
   graph) is only built once the previous phase proves useful — not
-  up front. See `docs/experiments/system-evolution.md` section 8 for the
+  up front. See `doc/experiments/system-evolution.md` section 8 for the
   phase order.
 - `index.html` / `PRD.md` remain as-is: they are the Domain #1 artifact,
   not something this axis needs to rewrite.
